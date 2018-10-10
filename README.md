@@ -7,4 +7,4 @@ $ yarn
 $ yarn dev
 ```
 
-Made with hardship with gentle laborers.
+Made with hardship by gentle laborers.
