@@ -79,8 +79,14 @@ export default function scrabbleReducer(state = initialState, action) {
 			return { ...state, picked };
 		case UNDO_TABLE:
 			tableHistory = [ ...state.tableHistory ];
-			table = tableHistory.length - 2 >= state.offset ? tableHistory.pop() : state.table;
-			return { ...state, tableHistory, table };
+			picked = [ ...state.picked ];
+			table = state.table;
+
+			if (state.picked[state.currentPlayer].length > 0) {
+				picked[state.currentPlayer] = picked[state.currentPlayer].slice(0, -1);
+				table = tableHistory.pop();
+			}
+			return { ...state, tableHistory, table, picked };
 		default:
 			return state;
 	}
