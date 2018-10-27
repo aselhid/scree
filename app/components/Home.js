@@ -1,20 +1,68 @@
 // @flow
 import React, { Component } from 'react';
-import { Link } from 'react-router-dom';
-import routes from '../constants/routes';
 import styles from './Home.css';
+import Table from '../components/Table';
+import Rack from '../components/Rack';
 
-type Props = {};
+export default class Home extends Component {
+	constructor(props) {
+		super(props);
 
-export default class Home extends Component<Props> {
-  props: Props;
+		this.state = {
+			playerCount: 2,
+			pickedChar: null
+		};
 
-  render() {
-    return (
-      <div className={styles.container} data-tid="container">
-        <h2>Home</h2>
-        <Link to={routes.COUNTER}>to Counter</Link>
-      </div>
-    );
-  }
+		this.onStartInputChange = this.onStartInputChange.bind(this);
+		this.onTileClicked = this.onTileClicked.bind(this);
+		this.onRackClicked = this.onRackClicked.bind(this);
+	}
+
+	onStartInputChange(evt) {
+		this.setState({ playerCount: evt.target.value });
+	}
+
+	onTileClicked(i, j) {
+		const { pickedChar } = this.state;
+		const { putTileOnTable } = this.props;
+
+		if (!!pickedChar) {
+			putTileOnTable(i, j, pickedChar);
+		}
+	}
+
+	onRackClicked(i) {
+		return (ri, char) => {
+			console.log(i, ri, char);
+			this.setState({ pickedChar: char });
+		};
+	}
+
+	render() {
+		const { racks, table, started, currentPlayer, picked } = this.props.scrabble;
+		const { initGame, undoTable } = this.props;
+		const { playerCount } = this.state;
+
+		return (
+			<div>
+				<Table table={table} callback={this.onTileClicked} />
+				<input onChange={this.onStartInputChange} value={playerCount} />
+				<button onClick={() => initGame(playerCount)} disabled={started}>
+					Start
+				</button>
+				<button onClick={undoTable}>Undo</button>
+				<button>Submit</button>
+				{racks ? (
+					racks.map((rack, i) => (
+						<Rack
+							rack={rack}
+							callback={this.onRackClicked(i)}
+							activeRack={currentPlayer === i}
+							picked={picked[i]}
+						/>
+					))
+				) : null}
+			</div>
+		);
+	}
 }

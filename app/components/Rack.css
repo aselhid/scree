@@ -1,0 +1,24 @@
+.rackContainer .tile {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  width: 3rem;
+  height: 3rem;
+  border: 2px solid black;
+  background: lightblue;
+  margin: 0.1rem;
+  cursor: pointer;
+}
+
+.rackContainer .tile > h2 {
+  display: inline-block;
+  color: black;
+}
+
+.rackContainer .tile.transparent {
+  opacity: 0.25;
+}
+
+.rackContainer .tile.brown {
+  background: rgb(222, 184, 135);
+}

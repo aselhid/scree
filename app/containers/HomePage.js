@@ -1,13 +1,20 @@
 // @flow
-import React, { Component } from 'react';
 import Home from '../components/Home';
+import { connect } from 'react-redux';
+import { initGame, putTileOnTable, undoTable } from '../actions/scrabble';
 
-type Props = {};
-
-export default class HomePage extends Component<Props> {
-  props: Props;
-
-  render() {
-    return <Home />;
-  }
+function mapStateToProps(state) {
+	return {
+		scrabble: state.scrabble
+	};
 }
+
+function mapDispatchToProps(dispatch) {
+	return {
+		initGame: (playerCount) => dispatch(initGame(playerCount)),
+		putTileOnTable: (i, j, char) => dispatch(putTileOnTable(i, j, char)),
+		undoTable: () => dispatch(undoTable())
+	};
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(Home);
