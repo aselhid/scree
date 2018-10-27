@@ -28,13 +28,16 @@ export default class Home extends Component {
 
 		if (!!pickedChar) {
 			putTileOnTable(i, j, pickedChar);
+			this.setState({ pickedChar: null });
 		}
 	}
 
 	onRackClicked(i) {
 		return (ri, char) => {
-			console.log(i, ri, char);
-			this.setState({ pickedChar: char });
+			if (!this.state.pickedChar) {
+				this.props.setPicked(i, [ ri ]);
+				this.setState({ pickedChar: char });
+			}
 		};
 	}
 

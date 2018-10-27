@@ -40,7 +40,7 @@ export const initGame = (playerCount) => {
 		dispatch(startGame());
 		dispatch(setSack(sack));
 		dispatch(setRacks(racks));
-		Array(playerCount).keys().forEach((i) => {
+		[ ...Array(playerCount).keys() ].forEach((i) => {
 			dispatch(setPicked(i, []));
 		});
 	};

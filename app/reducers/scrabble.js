@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import { SET_SACK, SET_RACKS, SET_TABLE, START_GAME, UNDO_TABLE } from '../actions/scrabble';
+import { SET_SACK, SET_RACKS, SET_TABLE, SET_PICKED, START_GAME, UNDO_TABLE } from '../actions/scrabble';
 
 const emptyTable = [
 	[ null, null, null, null, null, null, null, null, null, null, null, null, null, null, null ],
@@ -58,7 +58,7 @@ const initialState = {
 };
 
 export default function scrabbleReducer(state = initialState, action) {
-	let tableHistory, sack, racks, table;
+	let tableHistory, sack, racks, table, picked;
 
 	switch (action.type) {
 		case START_GAME:
@@ -73,6 +73,10 @@ export default function scrabbleReducer(state = initialState, action) {
 			table = action.table;
 			tableHistory = [ ...state.tableHistory, state.table ];
 			return { ...state, table, tableHistory };
+		case SET_PICKED:
+			picked = [ ...state.picked ];
+			picked[action.index] = picked[action.index] ? picked[action.index].concat(action.picked) : action.picked;
+			return { ...state, picked };
 		case UNDO_TABLE:
 			tableHistory = [ ...state.tableHistory ];
 			table = tableHistory.length - 2 >= state.offset ? tableHistory.pop() : state.table;
