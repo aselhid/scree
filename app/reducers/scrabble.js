@@ -1,23 +1,8 @@
 import _ from 'lodash';
-import { SET_SACK, SET_RACKS, SET_TABLE, SET_PICKED, START_GAME, UNDO_TABLE } from '../actions/scrabble';
+import { SET_SACK, SET_RACKS, SET_TABLE, SET_PICKED, START_GAME, UNDO_TABLE, UPDATE_OFFSET } from '../actions/scrabble';
+import { TABLE_COL, TABLE_ROW } from '../utils/scrabble';
 
-const emptyTable = [
-	[ null, null, null, null, null, null, null, null, null, null, null, null, null, null, null ],
-	[ null, null, null, null, null, null, null, null, null, null, null, null, null, null, null ],
-	[ null, null, null, null, null, null, null, null, null, null, null, null, null, null, null ],
-	[ null, null, null, null, null, null, null, null, null, null, null, null, null, null, null ],
-	[ null, null, null, null, null, null, null, null, null, null, null, null, null, null, null ],
-	[ null, null, null, null, null, null, null, null, null, null, null, null, null, null, null ],
-	[ null, null, null, null, null, null, null, null, null, null, null, null, null, null, null ],
-	[ null, null, null, null, null, null, null, null, null, null, null, null, null, null, null ],
-	[ null, null, null, null, null, null, null, null, null, null, null, null, null, null, null ],
-	[ null, null, null, null, null, null, null, null, null, null, null, null, null, null, null ],
-	[ null, null, null, null, null, null, null, null, null, null, null, null, null, null, null ],
-	[ null, null, null, null, null, null, null, null, null, null, null, null, null, null, null ],
-	[ null, null, null, null, null, null, null, null, null, null, null, null, null, null, null ],
-	[ null, null, null, null, null, null, null, null, null, null, null, null, null, null, null ],
-	[ null, null, null, null, null, null, null, null, null, null, null, null, null, null, null ]
-];
+const emptyTable = [ ...Array(TABLE_ROW).keys() ].map((e) => [ ...Array(TABLE_COL).keys() ].map((f) => null));
 
 const indoLetterDistribution = {
 	a: 21,
@@ -87,6 +72,9 @@ export default function scrabbleReducer(state = initialState, action) {
 				table = tableHistory.pop();
 			}
 			return { ...state, tableHistory, table, picked };
+		case UPDATE_OFFSET:
+			tableHistory = state.tableHistory;
+			return { ...state, offset: tableHistory.length - 1 };
 		default:
 			return state;
 	}
