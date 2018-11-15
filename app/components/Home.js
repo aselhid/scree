@@ -43,28 +43,36 @@ export default class Home extends Component {
 
 	render() {
 		const { racks, table, started, currentPlayer, picked } = this.props.scrabble;
-		const { initGame, undoTable } = this.props;
+		const { initGame, undoTable, submit } = this.props;
 		const { playerCount } = this.state;
 
 		return (
 			<div>
-				<Table table={table} callback={this.onTileClicked} />
-				<input onChange={this.onStartInputChange} value={playerCount} />
-				<button onClick={() => initGame(playerCount)} disabled={started}>
-					Start
-				</button>
-				<button onClick={undoTable}>Undo</button>
-				<button>Submit</button>
-				{racks ? (
-					racks.map((rack, i) => (
-						<Rack
-							rack={rack}
-							callback={this.onRackClicked(i)}
-							activeRack={currentPlayer === i}
-							picked={picked[i]}
-						/>
-					))
-				) : null}
+				{started && (
+					<div>
+						<Table table={table} callback={this.onTileClicked} />
+						<button onClick={undoTable}>Undo</button>
+						<button onClick={submit}>Submit</button>
+						{racks ? (
+							racks.map((rack, i) => (
+								<Rack
+									rack={rack}
+									callback={this.onRackClicked(i)}
+									activeRack={currentPlayer === i}
+									picked={picked[i]}
+								/>
+							))
+						) : null}
+					</div>
+				)}
+				{!started && (
+					<div>
+						<input onChange={this.onStartInputChange} value={playerCount} />
+						<button onClick={() => initGame(playerCount)} disabled={started}>
+							Start
+						</button>
+					</div>
+				)}
 			</div>
 		);
 	}
