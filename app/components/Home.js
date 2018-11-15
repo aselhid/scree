@@ -13,13 +13,8 @@ export default class Home extends Component {
 			pickedChar: null
 		};
 
-		this.onStartInputChange = this.onStartInputChange.bind(this);
 		this.onTileClicked = this.onTileClicked.bind(this);
 		this.onRackClicked = this.onRackClicked.bind(this);
-	}
-
-	onStartInputChange(evt) {
-		this.setState({ playerCount: evt.target.value });
 	}
 
 	onTileClicked(i, j) {
@@ -67,8 +62,7 @@ export default class Home extends Component {
 				)}
 				{!started && (
 					<div>
-						<input onChange={this.onStartInputChange} value={playerCount} />
-						<button onClick={() => initGame(playerCount)} disabled={started}>
+						<button onClick={() => initGame(2)} disabled={started}>
 							Start
 						</button>
 					</div>

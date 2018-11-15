@@ -1,5 +1,15 @@
 import _ from 'lodash';
-import { SET_SACK, SET_RACKS, SET_TABLE, SET_PICKED, START_GAME, UNDO_TABLE, UPDATE_OFFSET } from '../actions/scrabble';
+import {
+	SET_SACK,
+	SET_RACKS,
+	SET_TABLE,
+	SET_PICKED,
+	START_GAME,
+	UNDO_TABLE,
+	UPDATE_OFFSET,
+	CHANGE_TURN,
+	EMPTY_PICKED
+} from '../actions/scrabble';
 import { TABLE_COL, TABLE_ROW } from '../utils/scrabble';
 
 const emptyTable = [ ...Array(TABLE_ROW).keys() ].map((e) => [ ...Array(TABLE_COL).keys() ].map((f) => null));
@@ -75,6 +85,12 @@ export default function scrabbleReducer(state = initialState, action) {
 		case UPDATE_OFFSET:
 			tableHistory = state.tableHistory;
 			return { ...state, offset: tableHistory.length - 1 };
+		case CHANGE_TURN:
+			return { ...state, currentPlayer: (state.currentPlayer + 1) % state.racks.length };
+		case EMPTY_PICKED:
+			picked = [ ...state.picked ];
+			picked[state.currentPlayer] = [];
+			return { ...state, picked };
 		default:
 			return state;
 	}
