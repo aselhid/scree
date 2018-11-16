@@ -37,7 +37,7 @@ export default class Home extends Component {
 	}
 
 	render() {
-		const { racks, table, started, currentPlayer, picked } = this.props.scrabble;
+		const { racks, table, started, currentPlayer, picked, points } = this.props.scrabble;
 		const { initGame, undoTable, submit } = this.props;
 		const { playerCount } = this.state;
 
@@ -48,6 +48,11 @@ export default class Home extends Component {
 						<Table table={table} callback={this.onTileClicked} />
 						<button onClick={undoTable}>Undo</button>
 						<button onClick={submit}>Submit</button>
+						{points.map((element, index) => (
+							<h3>
+								Pemain {index} : {element}
+							</h3>
+						))}
 						{racks ? (
 							racks.map((rack, i) => (
 								<Rack
