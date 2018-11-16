@@ -4,6 +4,7 @@ import {
 	SET_RACKS,
 	SET_TABLE,
 	SET_PICKED,
+	SET_POINT,
 	START_GAME,
 	UNDO_TABLE,
 	UPDATE_OFFSET,
@@ -45,6 +46,7 @@ const initialState = {
 	sack: indoLetterDistribution,
 	racks: [],
 	picked: [],
+	points: [],
 	currentPlayer: 0,
 	table: emptyTable,
 	tableHistory: [],
@@ -53,7 +55,7 @@ const initialState = {
 };
 
 export default function scrabbleReducer(state = initialState, action) {
-	let tableHistory, sack, racks, table, picked;
+	let tableHistory, sack, racks, table, picked, points;
 
 	switch (action.type) {
 		case START_GAME:
@@ -72,6 +74,10 @@ export default function scrabbleReducer(state = initialState, action) {
 			picked = [ ...state.picked ];
 			picked[action.index] = picked[action.index] ? picked[action.index].concat(action.picked) : action.picked;
 			return { ...state, picked };
+		case SET_POINT:
+			points = [ ...state.points ];
+			points[action.index] = action.point;
+			return { ...state, points };
 		case UNDO_TABLE:
 			tableHistory = [ ...state.tableHistory ];
 			picked = [ ...state.picked ];

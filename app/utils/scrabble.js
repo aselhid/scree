@@ -1,34 +1,46 @@
 import _ from 'lodash';
+import dictionary from '../dictionary.json';
+import { Dawg } from './Dawg';
 
 export const TABLE_ROW = 15;
 export const TABLE_COL = 15;
+
+const dawg_dictionary = new Dawg(dictionary);
 
 export const generateRandomRacks = (sack, playerCount) => {
 	const racks = [];
 
 	for (let i = 0; i < playerCount; i++) {
 		const chars = Object.keys(sack);
-		const rack = [];
 
-		for (let j = 0; j < 7; j++) {
-			while (true) {
-				const randomChar = _.sample(chars);
+		let random_word;
+		while (true) {
+			random_word = _.sample(dictionary);
 
-				if (sack[randomChar] > 0) {
-					rack.push(randomChar);
-					sack[randomChar]--;
-					break;
-				}
+			if (random_word.length <= 7) {
+				break;
 			}
 		}
 
-		racks.push(rack);
+		const rack = random_word.split('');
+		rack.forEach((element) => sack[element]--);
+
+		while (rack.length < 7) {
+			const randomChar = _.sample(chars);
+
+			if (sack[randomChar] > 0) {
+				rack.push(randomChar);
+				sack[randomChar]--;
+			}
+		}
+
+		racks.push(_.shuffle(rack));
 	}
 
 	return { sack, racks };
 };
 
-export const validateTable = (table_before, table_after) => {
+export const getValidMoves = (table_before, table_after) => {
 	const flooded = flood(table_after, Math.floor(TABLE_ROW / 2), Math.floor(TABLE_COL / 2));
 
 	const flat_table_after = _.flatten(table_after);
@@ -41,24 +53,27 @@ export const validateTable = (table_before, table_after) => {
 	const one_axis = isOneAxis(new_chars_index);
 
 	if (new_chars_index.length === 0 || !connected_to_mid || !one_axis) {
-		return false;
+		return [];
 	}
 
 	const played_words = getPlayedWords(new_chars_index, table_after);
-	console.log(played_words);
-	return true;
-	// return played_words.reduce((acc, element) => acc || valid_word(element), false);
+	return played_words.filter((element) => dawg_dictionary.contains(element));
 };
 
-// cek kondisi ketika sack habis
 export const refillRack = (rack, picked, sack) => {
 	const chars = Object.keys(sack);
 
 	picked.forEach((index) => {
-		const random_char = _.sample(chars);
+		let usable_chars = chars.filter((element) => sack[element] > 0);
 
-		rack[index] = random_char;
-		sack[random_char]--;
+		if (usable_chars.length > 0) {
+			const random_char = _.sample(usable_chars);
+
+			rack[index] = random_char;
+			sack[random_char]--;
+		} else {
+			rack.splice(index, 1);
+		}
 	});
 
 	return { rack, newSack: sack };

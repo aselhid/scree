@@ -1,11 +1,12 @@
 import _ from 'lodash';
-import { generateRandomRacks, validateTable, validateMove, refillRack } from '../utils/scrabble';
+import { generateRandomRacks, getValidMoves, validateMove, refillRack } from '../utils/scrabble';
 
 export const START_GAME = 'scrabble/START_GAME';
 export const SET_SACK = 'scrabble/SET_SACK';
 export const SET_RACKS = 'scrabble/SET_RACKS';
 export const SET_TABLE = 'scrabble/SET_TABLE';
 export const SET_PICKED = 'scrabble/SET_PICKED';
+export const SET_POINT = 'scrabble/SET_POINT';
 export const UNDO_TABLE = 'scrabble/UNDO_TABLE';
 export const UPDATE_OFFSET = 'scrabble/UPDATE_OFFSET';
 export const CHANGE_TURN = 'scrabble/CHANGE_TURN';
@@ -36,6 +37,12 @@ export const setPicked = (index, picked) => ({
 	picked
 });
 
+export const setPoint = (index, point) => ({
+	type: SET_POINT,
+	index,
+	point
+});
+
 export const initGame = (playerCount) => {
 	return (dispatch, getState) => {
 		const { scrabble } = getState();
@@ -46,6 +53,7 @@ export const initGame = (playerCount) => {
 		dispatch(setRacks(racks));
 		[ ...Array(playerCount).keys() ].forEach((i) => {
 			dispatch(setPicked(i, []));
+			dispatch(setPoint(i, 0));
 		});
 	};
 };
@@ -70,10 +78,11 @@ export const undoTable = () => ({
 export const submit = () => {
 	return (dispatch, getState) => {
 		const { scrabble } = getState();
-		const { table, tableHistory, offset, racks, currentPlayer, sack, picked } = scrabble;
+		const { table, tableHistory, offset, racks, currentPlayer, sack, picked, points } = scrabble;
 
-		// console.log(validateTable(tableHistory[offset + 1], table));
-		if (validateTable(tableHistory[offset + 1], table)) {
+		const valid_move = getValidMoves(tableHistory[offset + 1], table);
+		if (valid_move.length > 0) {
+			const newPoint = points[currentPlayer] + valid_move.reduce((acc, word) => acc + word.length, 0);
 			const { rack, newSack } = refillRack(racks[currentPlayer], picked[currentPlayer], sack);
 			racks[currentPlayer] = rack;
 
@@ -82,6 +91,9 @@ export const submit = () => {
 			dispatch(setSack(newSack));
 			dispatch(emptyPicked());
 			dispatch(changeTurn());
+			dispatch(setPoint(currentPlayer, newPoint));
+		} else {
+			alert('NOT VALID');
 		}
 	};
 };
