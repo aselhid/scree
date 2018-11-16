@@ -1,140 +1,208 @@
-class Dawg {
-    constructor(words) {
-        this.dict = new Map();
-        this.dict.set(0, new Map());
-        this.dict.set(1, new Map());
-        this.size = 2;
+function sameNode(node1, node2) {
+    var same = (node1.endOfWord === node2.endOfWord);
+    for (var i = 0; i < 26; i++) {
+        same = same && (node1.child[i] == node2.child[i]);
+    }
+    return same;
+}
 
-        words.sort();
-        for (var i = 0; i < words.length; i++) {
-            //Add '~' if this word is prefix of the next word
-            var word = words[i];
-            
-            if (i < words.length - 1) {
-                var nextWord = words[i + 1];
-                for (var j = 0; j < word.length; j++) {
-                    if (word[j] !== nextWord[j]) break;
-                    if (j === word.length - 1) {
-                        word = word.concat("~");
-                    }
-                }
-            }
+function charToEdgeNumber(c) {
+    return c.charCodeAt(0) - 97;
+}
 
-            //Remove prefix
-            var lastKey = 0;
-            var subIndex;
-            for (subIndex = 0; subIndex < word.length; subIndex++) {
-                if (this.dict.get(lastKey).has(word[subIndex])) {
-                    lastKey = this.dict.get(lastKey).get(word[subIndex]);
-                } else {
-                    break;
-                }
-            }
-            
-            //Temp dict for the new word
-            var newEntries = this.createNewEntries(word.substring(subIndex), lastKey);
+function edgeNumberToChar(x) {
+    return String.fromCharCode(x + 97);
+}
 
-            //Optimize temp dict (common suffix)
-            this.optimize(newEntries);
-
-            //Add optimized temp dictionary to real dictionary
-            for (var [key, value] of newEntries.entries()) {
-                for (var [transKey, transValue] of value.entries()) {
-                    if (!this.dict.has(key)) {
-                        this.dict.set(key, new Map());
-                    }
-                    this.dict.get(key).set(transKey, transValue);
-                }
-            }
+class Node {
+    constructor(parent, endOfWord) {
+        this.child = [];
+        this.parent = parent;
+        this.endOfWord = endOfWord;
+        this.lastChild = undefined;
+        for (var i = 0; i < 26; i++) {
+            this.child.push(null);
         }
     }
+}
 
-    contains(word) {
-        var key = 0;
+/**
+    Directed Acyclic Word Graph - Minimum-state DAFSA (memory optimization) to contain set of strings.
+
+    Initialize with fixed words list.
+    Cannot add word to this data structure, so you must build new DAWG if you want to add more word.
+*/
+class Dawg {
+    constructor(words) {
+        this.root = new Node(null, false);
+        this.minimalizedStates = [];
+        this.buildAutomaton(words);
+        this.cleanup();
+    }
+
+    constains(word) {
+        var current = this.root;
         for (var i = 0; i < word.length; i++) {
-            if (this.dict.get(key).has(word[i])) {
-                key = this.dict.get(key).get(word[i]);
+            if (current.child[charToEdgeNumber(word[i])] != null) {
+                current = current.child[charToEdgeNumber(word[i])];
             } else {
                 return false;
             }
         }
-        while (this.dict.get(key).has("~")) {
-            key = this.dict.get(key).get("~");
-        }
-        return (key === 1);
+        return current.endOfWord;
     }
 
-    createNewEntries(word, lastKey) {
-        var newEntries = new Map();
-        var key = lastKey;
-        for (var i = 0; i < word.length; i++) {
-            if (!newEntries.has(key)) {
-                newEntries.set(key, new Map());
-            }
+    /**
+        DAWG builder
+    */
+    buildAutomaton(words) {
+        words.sort();
 
-            if (i === word.length - 1) {
-                newEntries.get(key).set(word[i], 1);
+        for (var i = 0; i < words.length; i++) {
+            var word = words[i];
+
+            var lastNodeAndSuffixIndex = this.getLastPrefixNode(word);
+            var lastNode = lastNodeAndSuffixIndex[0];
+            var suffix = word.substring(lastNodeAndSuffixIndex[1]);
+
+            if (lastNode.lastChild != undefined) {
+                this.optimize(lastNode);
+            }
+            this.addSuffix(lastNode, suffix);
+        }
+
+        this.optimize(this.root);
+    }
+
+    /**
+        Get last node of common prefix with the word and first unmatched character index.
+    */
+    getLastPrefixNode(word) {
+        var current = this.root;
+        var i;
+        for (i = 0; i < word.length; i++) {
+            if (current.child[charToEdgeNumber(word[i])] != null) {
+                current = current.child[charToEdgeNumber(word[i])];
             } else {
-                newEntries.get(key).set(word[i], this.size);
-                key = this.size++;
+                break;
             }
         }
-        return newEntries;
+        return [current, i];
     }
 
-    optimize(newEntries) {
-        var needOptimize = true;
-        while (needOptimize) {
-            needOptimize = false;
-            for (var [key1, value1] of newEntries.entries()) {
-                if (key1 < this.dict.size) continue;
-                for (var [key2, value2] of this.dict.entries()) {
-                    if (this.sameMap(value1, value2)) {
-                        this.replace(newEntries, key1, key2);
-                        newEntries.delete(key1);
-                        this.size--;
-                        needOptimize = true;
-                        break;
-                    }
-                }
+    /**
+        Add word from node
+    */
+    addSuffix(node, word) {
+        for (var i = 0; i < word.length; i++) {
+            if (i == word.length - 1) {
+                node.child[charToEdgeNumber(word[i])] = new Node(node, true);
+            } else {
+                node.child[charToEdgeNumber(word[i])] = new Node(node, false);
             }
+            node.lastChild = charToEdgeNumber(word[i]);
+            node = node.child[charToEdgeNumber(word[i])];
+        }
+        node.endOfWord = true;
+    }
+
+    /**
+        State minimization function
+    */
+    optimize(node) {
+        var child = node.child[node.lastChild];
+        if (child.lastChild != undefined) {
+            this.optimize(child);
+        }
+        var register = true;
+        for (var i = 0; i < this.minimalizedStates.length; i++) {
+            if (sameNode(child, this.minimalizedStates[i]) == true) {
+                node.child[node.lastChild] = this.minimalizedStates[i];
+                register = false;
+                break;
+            }
+        }
+        if (register == true) {
+            this.minimalizedStates.push(child);
         }
     }
 
-    replace(newEntries, key1, key2) {
-        for (var [key, value] of newEntries.entries()) {
-            for (var [transKey, transValue] of value) {
-                if (transValue === key1) {
-                    value.set(transKey, key2);
-                }
-            }
+    /**
+        Remove unused variable after construction.
+    */
+    cleanup() {
+        for (var i = 0; i < this.minimalizedStates.length; i++) {
+            delete this.minimalizedStates[i].lastChild;
         }
+        delete this.minimalizedStates;
     }
 
-    sameMap(map1, map2) {
-        if (map1.size === map2.size) {
-            var isSame = true;
-            for (var [key, value] of map1.entries()) {
-                if (!map2.has(key) || map2.get(key) !== value) {
-                    isSame = false;
-                    break;
-                }
-            }
-            return isSame;
-        }
-        return false;
-    }
+    /** 
+        For validation purpose.
+        Uncomment this and comment "delete this.minimalizedStates;" in cleanup() method
+        to validate the number of nodes constructed.
+    */
 
-    print() {
-        console.log("Size: ", this.size);
-        console.log(this.dict);
+    /*
+    getTotalNodes() {
+        return this.minimalizedStates.length;
     }
+    */
+    
 }
 
-//Test
-//const dawg = new Dawg(["log", "logs", "dog", "dogs"]);
-//dawg.print();
-//console.log(dawg.contains("log"));
-//console.log(dawg.contains("logs"));
-//console.log(dawg.contains("dog"));
-//console.log(dawg.contains("dogs"));
+/**
+    DAWG Iterator
+*/
+class DawgIterator {
+    constructor(dawg) {
+        this.dawg = dawg;
+        this.currentNode = dawg.root;
+        this.word = "";
+    }
+
+    hasNext(c) {
+        return this.currentNode.child[charToEdgeNumber(c)] != null;
+    }
+
+    next(c) {
+        if (this.currentNode.child[charToEdgeNumber(c)] != null) {
+            this.currentNode = this.currentNode.child[charToEdgeNumber(c)];
+            this.word = this.word.concat(c);
+        } else {
+            console.log("next() failed. This node doesn't have transition with character " + c);
+        }
+    }
+
+    back() {
+        if (this.currentNode.parent != null) {
+            this.currentNode = this.currentNode.parent;
+            this.word = this.word.substring(0, this.word.length - 1);
+        } else {
+            console.log("back() failed. This node doesn't have parent");
+        }
+    }
+
+    listNext() {
+        var childList = [];
+        for (var i = 0; i < 26; i++) {
+            if (this.currentNode.child[i] != null) {
+                childList.push(edgeNumberToChar(i));
+            }
+        }
+        return childList;
+    }
+
+    reset() {
+        this.currentNode = this.dawg.root;
+        this.parentNode = null;
+        this.word = "";
+    }
+
+    getWord() {
+        if (this.currentNode.endOfWord == true) {
+            return this.word;
+        }
+        return undefined;
+    }
+}
