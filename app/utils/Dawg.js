@@ -40,7 +40,7 @@ class Dawg {
         this.cleanup();
     }
 
-    constains(word) {
+    contains(word) {
         var current = this.root;
         for (var i = 0; i < word.length; i++) {
             if (current.child[charToEdgeNumber(word[i])] != null) {
