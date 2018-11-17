@@ -5,6 +5,8 @@ export default class AI {
   constructor(dawg) {
     this.dawg = dawg;
     this.possibleMoves;
+    this.crossChecks;
+    this.accrossPoints;
   }
 
   best(table, myRack, foeRack) {
@@ -25,18 +27,18 @@ export default class AI {
         }
       }
       // nyari crossChecks sama poin tambahannya kalo ngisi column itu
-      let crossChecks = [];
-      let accrossPoints = [];
-      for (let j = 0; j < 15; j++) crossChecks.push([]);
-      for (let j = 0; j < 15; j++) accrossPoints.push(0);
+      this.crossChecks = [];
+      this.accrossPoints = [];
+      for (let j = 0; j < 15; j++) this.crossChecks.push([]);
+      for (let j = 0; j < 15; j++) this.accrossPoints.push(0);
       for (let j = 0; j < 15; j++) {
         if (table[i][j] != null) continue;
         let up = this.traverseUp(table, i - 1, j);
         let down = this.traverseDown(table, i + 1, j);
         if (up == '' && down == '') {
           for (let k = 97; k < 97 + 26; k++) {
-            crossChecks[j].push(String.fromCharCode(k));
-            accrossPoints[j] = 0;
+            this.crossChecks[j].push(String.fromCharCode(k));
+            this.accrossPoints[j] = 0;
           }
         } else {
           let iterator = new DawgIterator(this.dawg);
@@ -53,44 +55,23 @@ export default class AI {
                 break;
               }
             }
-            if (valid) valid = traversor.getWord != undefined;
+            if (valid) valid = traversor.getWord() != undefined;
             if (valid) {
-              crossChecks[j].push(edges[k]);
-              accrossPoints[j] = up.length + down.length + 1;
+              this.crossChecks[j].push(edges[k]);
+              this.accrossPoints[j] = up.length + down.length + 1;
             }
           }
         }
       }
-      // console.log(i, anchors);
-      // console.log(i, crossChecks);
-      // console.log(i, accrossPoints);
+      console.log(anchors);
       // coba bikin kata dari semua anchor
       for (let j = 0; j < anchors.length; j++) {
         let limit = anchors[0];
         if (j != 0) limit = anchors[j] - anchors[j - 1] - 1;
         let iterator = new DawgIterator(this.dawg);
         if (anchors[j] - 1 >= 0 && table[i][anchors[j] - 1] != null)
-          this.leftPartExisting(
-            table,
-            myRack,
-            i,
-            anchors[j],
-            crossChecks,
-            accrossPoints,
-            iterator
-          );
-        else
-          this.leftPart(
-            table,
-            myRack,
-            i,
-            anchors[j],
-            crossChecks,
-            accrossPoints,
-            '',
-            iterator,
-            limit
-          );
+          this.leftPartExisting(table, myRack, i, anchors[j], iterator);
+        else this.leftPart(table, myRack, i, anchors[j], '', iterator, limit);
       }
     }
     console.log(this.possibleMoves);
@@ -114,54 +95,20 @@ export default class AI {
     return this.traverseLeft(table, x, y - 1) + table[x][y];
   }
 
-  leftPartExisting(table, rack, x, y, crossChecks, accrossPoints, node) {
+  leftPartExisting(table, rack, x, y, node) {
     let left = this.traverseLeft(table, x, y - 1);
     for (let i = 0; i < left.length; i++) node.next(left[i]);
-    this.extendRight(
-      table,
-      rack,
-      x,
-      y,
-      x,
-      y,
-      crossChecks,
-      accrossPoints,
-      left,
-      node
-    );
+    this.extendRight(table, rack, x, y, x, y, left, node);
   }
 
-  leftPart(
-    table,
-    rack,
-    x,
-    y,
-    crossChecks,
-    accrossPoints,
-    partialWord,
-    node,
-    limit
-  ) {
-    // console.log('heaven', x, y, partialWord, rack);
-    this.extendRight(
-      table,
-      rack,
-      x,
-      y,
-      x,
-      y,
-      crossChecks,
-      accrossPoints,
-      partialWord,
-      _.clone(node)
-    );
+  leftPart(table, rack, x, y, partialWord, node, limit) {
+    this.extendRight(table, rack, x, y, x, y, partialWord, _.clone(node));
     if (limit > 0) {
       let edges = node.listNext();
       for (let i = 0; i < edges.length; i++) {
         let now = edges[i];
         let nowIdx = rack.indexOf(now);
         if (rack.indexOf(now) > -1) {
-          // console.log('popa', now);
           rack.splice(nowIdx, 1);
           let nextNode = _.clone(node);
           nextNode.next(now);
@@ -170,58 +117,41 @@ export default class AI {
             rack,
             x,
             y,
-            crossChecks,
-            accrossPoints,
             partialWord + now,
             nextNode,
             limit - 1
           );
           rack.push(now);
-          // console.log('push', now);
         }
       }
     }
   }
 
-  extendRight(
-    table,
-    rack,
-    anchorX,
-    anchorY,
-    x,
-    y,
-    crossChecks,
-    accrossPoints,
-    partialWord,
-    node
-  ) {
-    // console.log('hell', anchorX, anchorY, x, y, partialWord, rack);
+  extendRight(table, rack, anchorX, anchorY, x, y, partialWord, node) {
+    if (y >= 15) {
+      let currentWord = node.getWord();
+      if (currentWord != undefined) {
+        if (x != anchorX || y != anchorY) {
+          this.possibleMoves.push([partialWord, x, y - partialWord.length]);
+          // console.log(x, y - partialWord.length, x, y - 1, partialWord);
+        }
+      }
+      return;
+    }
     if (table[x][y] == null) {
-      // console.log('kosong');
       let currentWord = node.getWord();
       if (currentWord != undefined) {
         if (!(x == anchorX && y == anchorY)) {
-          this.possibleMoves.push(partialWord);
-          console.log(
-            'from: ',
-            x,
-            y - partialWord.length,
-            'until: ',
-            x,
-            y - 1,
-            partialWord
-          );
-          // console.log(this.possibleMoves);
+          this.possibleMoves.push([partialWord, x, y - partialWord.length]);
+          // console.log(x, y - partialWord.length, x, y - 1, partialWord);
         }
       }
       let edges = node.listNext();
       for (let i = 0; i < edges.length; i++) {
         let now = edges[i];
         let nowIdx = rack.indexOf(now);
-        // console.log('pepe', now, nowIdx, crossChecks[y].indexOf(now));
-        if (nowIdx > -1 && crossChecks[y].indexOf(now) > -1) {
+        if (nowIdx > -1 && this.crossChecks[y].indexOf(now) > -1) {
           rack.splice(nowIdx, 1);
-          // console.log('popo', now, rack);
           let nextNode = _.clone(node);
           nextNode.next(now);
           this.extendRight(
@@ -231,17 +161,13 @@ export default class AI {
             anchorY,
             x,
             y + 1,
-            crossChecks,
-            accrossPoints,
             partialWord + now,
             nextNode
           );
           rack.push(now);
-          // console.log('pusho', now, rack);
         }
       }
     } else {
-      // console.log('tidak');
       let now = table[x][y];
       if (node.hasNext(now)) {
         let nextNode = _.clone(node);
@@ -253,8 +179,6 @@ export default class AI {
           anchorY,
           x,
           y + 1,
-          crossChecks,
-          accrossPoints,
           partialWord + now,
           nextNode
         );
