@@ -33,31 +33,38 @@ export default class AI {
         if (table[i][j] != null) continue;
         let up = this.traverseUp(table, i - 1, j);
         let down = this.traverseDown(table, i + 1, j);
-        let iterator = new DawgIterator(this.dawg);
-        for (let k = 0; k < up.length; k++) iterator.next(up[k]);
-        let edges = iterator.listNext();
-        for (let k = 0; k < edges.length; k++) {
-          let traversor = _.clone(iterator);
-          traversor.next(edges[k]);
-          let valid = traversor.getWord != undefined;
-          for (let l = 0; l < down.length; l++) {
-            if (traversor.hasNext(down[l])) traversor.next(down[l]);
-            else {
-              valid = false;
-              break;
-            }
+        if (up == '' && down == '') {
+          for (let k = 97; k < 97 + 26; k++) {
+            crossChecks[j].push(String.fromCharCode(k));
+            accrossPoints[j] = 0;
           }
-          if (valid) valid = traversor.getWord != undefined;
-          if (valid) {
-            crossChecks[j].push(edges[k]);
-            if (up.length > 0 || down.length > 0)
+        } else {
+          let iterator = new DawgIterator(this.dawg);
+          for (let k = 0; k < up.length; k++) iterator.next(up[k]);
+          let edges = iterator.listNext();
+          for (let k = 0; k < edges.length; k++) {
+            let traversor = _.clone(iterator);
+            traversor.next(edges[k]);
+            let valid = traversor.getWord() != undefined;
+            for (let l = 0; l < down.length; l++) {
+              if (traversor.hasNext(down[l])) traversor.next(down[l]);
+              else {
+                valid = false;
+                break;
+              }
+            }
+            if (valid) valid = traversor.getWord != undefined;
+            if (valid) {
+              crossChecks[j].push(edges[k]);
               accrossPoints[j] = up.length + down.length + 1;
-            else accrossPoints[j] = 0;
+            }
           }
         }
       }
-      console.log(i, anchors);
-      //
+      // console.log(i, anchors);
+      // console.log(i, crossChecks);
+      // console.log(i, accrossPoints);
+      // coba bikin kata dari semua anchor
       for (let j = 0; j < anchors.length; j++) {
         let limit = anchors[0];
         if (j != 0) limit = anchors[j] - anchors[j - 1] - 1;
@@ -86,6 +93,7 @@ export default class AI {
           );
       }
     }
+    console.log(this.possibleMoves);
   }
 
   traverseUp(table, x, y) {
@@ -109,7 +117,18 @@ export default class AI {
   leftPartExisting(table, rack, x, y, crossChecks, accrossPoints, node) {
     let left = this.traverseLeft(table, x, y - 1);
     for (let i = 0; i < left.length; i++) node.next(left[i]);
-    this.extendRight(table, rack, x, y, crossChecks, accrossPoints, left, node);
+    this.extendRight(
+      table,
+      rack,
+      x,
+      y,
+      x,
+      y,
+      crossChecks,
+      accrossPoints,
+      left,
+      node
+    );
   }
 
   leftPart(
@@ -127,6 +146,8 @@ export default class AI {
     this.extendRight(
       table,
       rack,
+      x,
+      y,
       x,
       y,
       crossChecks,
@@ -165,6 +186,8 @@ export default class AI {
   extendRight(
     table,
     rack,
+    anchorX,
+    anchorY,
     x,
     y,
     crossChecks,
@@ -172,14 +195,24 @@ export default class AI {
     partialWord,
     node
   ) {
-    // console.log('hell', x, y, partialWord, rack);
+    // console.log('hell', anchorX, anchorY, x, y, partialWord, rack);
     if (table[x][y] == null) {
       // console.log('kosong');
       let currentWord = node.getWord();
       if (currentWord != undefined) {
-        this.possibleMoves.push(partialWord);
-        console.log(x, y, partialWord);
-        // console.log(this.possibleMoves);
+        if (!(x == anchorX && y == anchorY)) {
+          this.possibleMoves.push(partialWord);
+          console.log(
+            'from: ',
+            x,
+            y - partialWord.length,
+            'until: ',
+            x,
+            y - 1,
+            partialWord
+          );
+          // console.log(this.possibleMoves);
+        }
       }
       let edges = node.listNext();
       for (let i = 0; i < edges.length; i++) {
@@ -194,6 +227,8 @@ export default class AI {
           this.extendRight(
             table,
             rack,
+            anchorX,
+            anchorY,
             x,
             y + 1,
             crossChecks,
@@ -214,6 +249,8 @@ export default class AI {
         this.extendRight(
           table,
           rack,
+          anchorX,
+          anchorY,
           x,
           y + 1,
           crossChecks,
