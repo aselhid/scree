@@ -13,17 +13,52 @@ export default class AI {
   }
 
   best(table, myRack, foeRack) {
-    this.possibleMoves = [];
+    let moves = [];
     // generating accross moves
-    this.direction = 0;
-    this.generateMoves(table, myRack);
+    moves = moves.concat(this.generateMoves(table, myRack, 0));
     // generating down moves;
-    this.direction = 1;
-    this.generateMoves(this.rotateTable(table), myRack);
-    console.log(this.possibleMoves);
+    moves = moves.concat(
+      this.generateMoves(this.transposeTable(table), myRack, 1)
+    );
+
+    let optimumMove = ['', -1, -1, -10000000, -1];
+    let maxDifference = -10000000;
+    for (let i = 0; i < moves.length; i++) {
+      let enemyMoves = [];
+      let newTable = this.fillTable(table, moves[i]);
+
+      enemyMoves = enemyMoves.concat(this.generateMoves(newTable, foeRack, 0));
+      enemyMoves = enemyMoves.concat(
+        this.generateMoves(this.transposeTable(newTable), foeRack, 1)
+      );
+
+      for (let j = 0; j < enemyMoves.length; j++) {
+        if (moves[i][3] - enemyMoves[j][3] > maxDifference) {
+          optimumMove = moves[i];
+          maxDifference = moves[i][3] - enemyMoves[j][3];
+        }
+      }
+    }
+    return this.toAnswer(optimumMove);
   }
 
-  generateMoves(table, rack) {
+  toAnswer(move) {
+    let ans = [];
+    if (move[4] == 0) {
+      for (let i = 0; i < move[0].length; i++) {
+        ans.push([move[0][i], move[1], move[2] + i]);
+      }
+    } else {
+      for (let i = 0; i < move[0].length; i++) {
+        ans.push([move[0][i], move[2], move[1] + i]);
+      }
+    }
+    return ans;
+  }
+
+  generateMoves(table, rack, direction) {
+    this.possibleMoves = [];
+    this.direction = direction;
     // iterasi setiap row
     for (let i = 0; i < 15; i++) {
       // nyari anchors
@@ -116,6 +151,7 @@ export default class AI {
         else this.leftPart(table, rack, i, anchors[j], '', iterator, limit);
       }
     }
+    return this.possibleMoves;
   }
 
   traverseUp(table, x, y) {
@@ -184,8 +220,7 @@ export default class AI {
           let xIdx = x;
           let yIdx = y - partialWord.length;
           if (this.direction == 1) {
-            xIdx = yIdx;
-            yIdx = 15 - x - 1;
+            [xIdx, yIdx] = [yIdx, xIdx];
           }
           this.possibleMoves.push([
             partialWord,
@@ -209,8 +244,7 @@ export default class AI {
           let xIdx = x;
           let yIdx = y - partialWord.length;
           if (this.direction == 1) {
-            xIdx = yIdx;
-            yIdx = 15 - x - 1;
+            [xIdx, yIdx] = [yIdx, xIdx];
           }
           this.possibleMoves.push([
             partialWord,
@@ -243,14 +277,32 @@ export default class AI {
     }
   }
 
-  rotateTable(table) {
+  transposeTable(table) {
     let newTable = [];
     for (let i = 0; i < 15; i++) {
       let row = [];
       for (let j = 0; j < 15; j++) {
-        row.push(table[j][15 - i - 1]);
+        row.push(table[j][i]);
       }
       newTable.push(row);
+    }
+    return newTable;
+  }
+
+  fillTable(table, move) {
+    let word = move[0];
+    let x = move[1];
+    let y = move[2];
+    let direction = move[4];
+    let newTable = _.cloneDeep(table);
+    if (direction == 0) {
+      for (let i = y; i < y + word.length; i++) {
+        newTable[x][i] = word[i - y];
+      }
+    } else {
+      for (let i = x; i < x + word.length; i++) {
+        newTable[i][y] = word[i - x];
+      }
     }
     return newTable;
   }

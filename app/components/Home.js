@@ -60,7 +60,7 @@ export default class Home extends Component {
               onClick={() => {
                 console.log('hello');
                 let ai = new AI(dawg_dictionary);
-                ai.best(
+                let ans = ai.best(
                   [
                     [ null, null, null, null, null, null, null, null, null, null, null, null, null, null, null ],
                     [ null, null, null, null, null, null, null, null, null, null, null, null, null, null, null ],
@@ -81,6 +81,7 @@ export default class Home extends Component {
                   ['a', 'n', 'g', 'i', 'n', 'a', 'a'],
                   ['p', 'e', 't', 'i', 'r', 'a', 'a']
                 );
+                console.log(ans);
               }}
             >
               Submit
