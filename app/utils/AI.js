@@ -1,4 +1,4 @@
-import { Dawg, DawgIterator } from '../utils/Dawg';
+import { DawgIterator } from '../utils/Dawg';
 import _ from 'lodash';
 
 export default class AI {
@@ -7,7 +7,9 @@ export default class AI {
     this.possibleMoves; // 0: word, 1: x, 2: y, 3: score, 4: direction
     this.crossChecks;
     this.crossPoints;
-    this.direction;
+    this.direction; // 0: horizontal, 1: vertical
+    this.anchorX;
+    this.anchorY;
   }
 
   best(table, myRack, foeRack) {
@@ -46,19 +48,14 @@ export default class AI {
         if (table[i][j] != null) continue;
         let up = this.traverseUp(table, i - 1, j);
         let down = this.traverseDown(table, i + 1, j);
-        if (up == '' && down == '') {
-          for (let k = 97; k < 97 + 26; k++) {
-            this.crossChecks[j].push(String.fromCharCode(k));
-            this.crossPoints[j] = 0;
-          }
-        } else {
+        if (up != '' && down != '') {
           let iterator = new DawgIterator(this.dawg);
           for (let k = 0; k < up.length; k++) iterator.next(up[k]);
           let edges = iterator.listNext();
           for (let k = 0; k < edges.length; k++) {
             let traversor = _.clone(iterator);
             traversor.next(edges[k]);
-            let valid = traversor.getWord() != undefined;
+            let valid = true;
             for (let l = 0; l < down.length; l++) {
               if (traversor.hasNext(down[l])) traversor.next(down[l]);
               else {
@@ -66,15 +63,49 @@ export default class AI {
                 break;
               }
             }
-            if (valid) valid = traversor.getWord() != undefined;
-            if (valid) {
+            if (valid && traversor.getWord() != undefined) {
               this.crossChecks[j].push(edges[k]);
               this.crossPoints[j] = up.length + down.length + 1;
             }
           }
+        } else if (up != '') {
+          let iterator = new DawgIterator(this.dawg);
+          for (let k = 0; k < up.length; k++) iterator.next(up[k]);
+          let edges = iterator.listNext();
+          for (let k = 0; k < edges.length; k++) {
+            let traversor = _.clone(iterator);
+            traversor.next(edges[k]);
+            if (traversor.getWord() != undefined) {
+              this.crossChecks[j].push(edges[k]);
+              this.crossPoints[j] = up.length + 1;
+            }
+          }
+        } else if (down != '') {
+          let iterator = new DawgIterator(this.dawg);
+          let edges = iterator.listNext();
+          for (let k = 0; k < edges.length; k++) {
+            let traversor = _.clone(iterator);
+            traversor.next(edges[k]);
+            let valid = true;
+            for (let l = 0; l < down.length; l++) {
+              if (traversor.hasNext(down[l])) traversor.next(down[l]);
+              else {
+                valid = false;
+                break;
+              }
+            }
+            if (valid && traversor.getWord() != undefined) {
+              this.crossChecks[j].push(edges[k]);
+              this.crossPoints[j] = down.length + 1;
+            }
+          }
+        } else {
+          for (let k = 97; k < 97 + 26; k++) {
+            this.crossChecks[j].push(String.fromCharCode(k));
+            this.crossPoints[j] = 0;
+          }
         }
       }
-      // console.log(anchors);
       // coba bikin kata dari semua anchor
       for (let j = 0; j < anchors.length; j++) {
         let limit = anchors[0];
@@ -108,11 +139,15 @@ export default class AI {
   leftPartExisting(table, rack, x, y, node) {
     let left = this.traverseLeft(table, x, y - 1);
     for (let i = 0; i < left.length; i++) node.next(left[i]);
-    this.extendRight(table, rack, x, y, x, y, left, node);
+    this.anchorX = x;
+    this.anchorY = y;
+    this.extendRight(table, rack, x, y, left, node);
   }
 
   leftPart(table, rack, x, y, partialWord, node, limit) {
-    this.extendRight(table, rack, x, y, x, y, partialWord, _.clone(node));
+    this.anchorX = x;
+    this.anchorY = y;
+    this.extendRight(table, rack, x, y, partialWord, _.clone(node));
     if (limit > 0) {
       let edges = node.listNext();
       for (let i = 0; i < edges.length; i++) {
@@ -137,11 +172,11 @@ export default class AI {
     }
   }
 
-  extendRight(table, rack, anchorX, anchorY, x, y, partialWord, node) {
+  extendRight(table, rack, x, y, partialWord, node) {
     if (y >= 15) {
       let currentWord = node.getWord();
       if (currentWord != undefined) {
-        if (!(x == anchorX && y == anchorY)) {
+        if (!(x == this.anchorX && y == this.anchorY)) {
           let score = partialWord.length;
           for (let i = y - partialWord.length; i < y; i++) {
             score += this.crossPoints[i];
@@ -150,7 +185,7 @@ export default class AI {
           let yIdx = y - partialWord.length;
           if (this.direction == 1) {
             xIdx = yIdx;
-            yIdx = 15 - xIdx;
+            yIdx = 15 - x - 1;
           }
           this.possibleMoves.push([
             partialWord,
@@ -159,7 +194,6 @@ export default class AI {
             score,
             this.direction
           ]);
-          // console.log(x, y - partialWord.length, x, y - 1, partialWord);
         }
       }
       return;
@@ -167,7 +201,7 @@ export default class AI {
     if (table[x][y] == null) {
       let currentWord = node.getWord();
       if (currentWord != undefined) {
-        if (!(x == anchorX && y == anchorY)) {
+        if (!(x == this.anchorX && y == this.anchorY)) {
           let score = partialWord.length;
           for (let i = y - partialWord.length; i < y; i++) {
             score += this.crossPoints[i];
@@ -176,7 +210,7 @@ export default class AI {
           let yIdx = y - partialWord.length;
           if (this.direction == 1) {
             xIdx = yIdx;
-            yIdx = 15 - xIdx;
+            yIdx = 15 - x - 1;
           }
           this.possibleMoves.push([
             partialWord,
@@ -185,7 +219,6 @@ export default class AI {
             score,
             this.direction
           ]);
-          // console.log(x, y - partialWord.length, x, y - 1, partialWord);
         }
       }
       let edges = node.listNext();
@@ -196,16 +229,7 @@ export default class AI {
           rack.splice(nowIdx, 1);
           let nextNode = _.clone(node);
           nextNode.next(now);
-          this.extendRight(
-            table,
-            rack,
-            anchorX,
-            anchorY,
-            x,
-            y + 1,
-            partialWord + now,
-            nextNode
-          );
+          this.extendRight(table, rack, x, y + 1, partialWord + now, nextNode);
           rack.push(now);
         }
       }
@@ -214,16 +238,7 @@ export default class AI {
       if (node.hasNext(now)) {
         let nextNode = _.clone(node);
         nextNode.next(now);
-        this.extendRight(
-          table,
-          rack,
-          anchorX,
-          anchorY,
-          x,
-          y + 1,
-          partialWord + now,
-          nextNode
-        );
+        this.extendRight(table, rack, x, y + 1, partialWord + now, nextNode);
       }
     }
   }
