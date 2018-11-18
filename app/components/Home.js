@@ -69,14 +69,14 @@ export default class Home extends Component {
                     [ null, null, null, null, null, null, null, null, null, null, null, null, null, null, null ],
                     [ null, null, null, null, null, null, null, null, null, null, null, null, null, null, null ],
                     [ null, null, null, null, null, null, null, null, null, null, null, null, null, null, null ],
+                    [ null, null, null, null, null, null, null, 'a', null, null, null, null, null, null, null ],
                     [ null, null, null, null, null, null, null, null, null, null, null, null, null, null, null ],
                     [ null, null, null, null, null, null, null, null, null, null, null, null, null, null, null ],
                     [ null, null, null, null, null, null, null, null, null, null, null, null, null, null, null ],
                     [ null, null, null, null, null, null, null, null, null, null, null, null, null, null, null ],
                     [ null, null, null, null, null, null, null, null, null, null, null, null, null, null, null ],
                     [ null, null, null, null, null, null, null, null, null, null, null, null, null, null, null ],
-                    [ null, null, null, null, null, null, null, null, null, null, null, null, null, null, null ],
-                    [ 'a', null, null, null, null, null, null, null, null, null, null, null, null, null, null ]
+                    [ null, null, null, null, null, null, null, null, null, null, null, null, null, null, null ]
                   ],
                   ['a', 'n', 'g', 'i', 'n', 'a', 'a'],
                   ['p', 'e', 't', 'i', 'r', 'a', 'a']
