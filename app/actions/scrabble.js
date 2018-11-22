@@ -110,15 +110,31 @@ export const submit = () => {
 
 const runAi = () => (dispatch, getState) => {
 	const { scrabble } = getState();
-	const { aiTurns, currentPlayer, table, racks } = scrabble;
+	const { aiTurns, currentPlayer, table, racks, picked } = scrabble;
 	const otherPlayer = (currentPlayer + 1) % 2;
 
 	if (aiTurns.includes(currentPlayer)) {
 		const best = DAWG_AI.best(table, racks[currentPlayer], racks[otherPlayer]);
+		const newTable = _.cloneDeep(table);
 
-		best.forEach((element) => {
-			console.log(element);
+		best.forEach((word) => {
+			const [ char, row, column ] = word;
+			if (!table[row][column]) {
+				const rackIndex = racks[currentPlayer].reduce((acc, el, index) => {
+					if (acc > -1) {
+						return acc;
+					}
+
+					return char === el ? index : acc;
+				}, -1);
+				newTable[row][column] = char;
+
+				dispatch(setPicked(currentPlayer, [ rackIndex ]));
+			}
 		});
+
+		dispatch(setTable(newTable));
+		dispatch(submit());
 	}
 };
 
