@@ -3,6 +3,7 @@ import React, { Component } from 'react';
 import styles from './Home.css';
 import Table from '../components/Table';
 import Rack from '../components/Rack';
+import { dawg_dictionary } from '../utils/scrabble';
 
 export default class Home extends Component {
 	constructor(props) {
@@ -10,11 +11,13 @@ export default class Home extends Component {
 
 		this.state = {
 			playerCount: 2,
-			pickedChar: null
+			pickedChar: null,
+			aiTurns: []
 		};
 
 		this.onTileClicked = this.onTileClicked.bind(this);
 		this.onRackClicked = this.onRackClicked.bind(this);
+		this.onCheckboxChange = this.onCheckboxChange.bind(this);
 	}
 
 	onTileClicked(i, j) {
@@ -36,9 +39,14 @@ export default class Home extends Component {
 		};
 	}
 
+	onCheckboxChange(evt) {
+		const value = parseInt(evt.target.value);
+		this.props.toggleAiTurn(value);
+	}
+
 	render() {
 		const { racks, table, started, currentPlayer, picked, points } = this.props.scrabble;
-		const { initGame, undoTable, submit } = this.props;
+		const { undoTable, submit, initGame } = this.props;
 		const { playerCount } = this.state;
 
 		return (
@@ -67,6 +75,10 @@ export default class Home extends Component {
 				)}
 				{!started && (
 					<div>
+						<label for="turn1">Turn 1</label>
+						<input id="turn1" type="checkbox" name="Turn 1" value="0" onChange={this.onCheckboxChange} />
+						<label for="turn2">Turn 2</label>
+						<input id="turn2" type="checkbox" name="Turn 2" value="1" onChange={this.onCheckboxChange} />
 						<button onClick={() => initGame(2)} disabled={started}>
 							Start
 						</button>

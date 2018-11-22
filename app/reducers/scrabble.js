@@ -5,6 +5,7 @@ import {
 	SET_TABLE,
 	SET_PICKED,
 	SET_POINT,
+	TOGGLE_AI_TURN,
 	START_GAME,
 	UNDO_TABLE,
 	UPDATE_OFFSET,
@@ -47,6 +48,7 @@ const initialState = {
 	racks: [],
 	picked: [],
 	points: [],
+	aiTurns: [],
 	currentPlayer: 0,
 	table: emptyTable,
 	tableHistory: [],
@@ -55,7 +57,7 @@ const initialState = {
 };
 
 export default function scrabbleReducer(state = initialState, action) {
-	let tableHistory, sack, racks, table, picked, points;
+	let tableHistory, sack, racks, table, picked, points, aiTurns;
 
 	switch (action.type) {
 		case START_GAME:
@@ -78,6 +80,11 @@ export default function scrabbleReducer(state = initialState, action) {
 			points = [ ...state.points ];
 			points[action.index] = action.point;
 			return { ...state, points };
+		case TOGGLE_AI_TURN:
+			aiTurns = state.aiTurns.includes(action.turn)
+				? state.aiTurns.filter((el) => el !== action.turn)
+				: state.aiTurns.concat([ action.turn ]);
+			return { ...state, aiTurns };
 		case UNDO_TABLE:
 			tableHistory = [ ...state.tableHistory ];
 			picked = [ ...state.picked ];

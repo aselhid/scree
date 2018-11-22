@@ -5,7 +5,7 @@ import { Dawg } from './Dawg';
 export const TABLE_ROW = 15;
 export const TABLE_COL = 15;
 
-const dawg_dictionary = new Dawg(dictionary);
+export const dawg_dictionary = new Dawg(dictionary);
 
 export const generateRandomRacks = (sack, playerCount) => {
 	const racks = [];
