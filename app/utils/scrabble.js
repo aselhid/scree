@@ -46,20 +46,25 @@ export const getValidMoves = (table_before, table_after) => {
 	const flat_table_after = _.flatten(table_after);
 	const new_chars_index = getNewCharsIndex(table_before, table_after);
 
-	const connected_to_mid = flat_table_after.reduce(
-		(acc, next, index) => acc && (next ? flooded.includes(index) : true),
-		true
-	);
+	console.log(table_after, flooded);
+	const connected_to_mid = flat_table_after.reduce((acc, next, index) => {
+		if (next && !flooded.includes(index)) {
+			console.log(next, index);
+		}
+
+		return acc && (next ? flooded.includes(index) : true);
+	}, true);
 	const one_axis = isOneAxis(new_chars_index);
 
-	// console.log('validate table state', new_chars_index.length, connected_to_mid, one_axis);
+	console.log('validate table state', new_chars_index.length, connected_to_mid, one_axis);
 	if (new_chars_index.length === 0 || !connected_to_mid || !one_axis) {
 		return [];
 	}
 
 	const played_words = getPlayedWords(new_chars_index, table_after);
-	// console.log('validation', played_words);
-	return played_words.filter((element) => dawg_dictionary.contains(element));
+	console.log('validation', played_words);
+	const filtered = played_words.filter((element) => dawg_dictionary.contains(element));
+	return filtered.length === played_words.length ? filtered : [];
 };
 
 export const refillRack = (rack, picked, sack) => {
@@ -193,6 +198,12 @@ const uniq = (a) => {
 	return a.filter((element) => (seen.hasOwnProperty(element) ? false : (seen[element] = true)));
 };
 
-const coordToIndex = (x, y) => x * 15 + y;
+const coordToIndex = (x, y) => {
+	if (x >= 15 || y >= 15 || x < 0 || y < 0) {
+		return -1;
+	}
+
+	return x * 15 + y;
+};
 
 const indexToCoord = (index) => [ Math.floor(index / TABLE_ROW), index % TABLE_ROW ];

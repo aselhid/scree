@@ -1,7 +1,7 @@
 // @flow
 import Home from '../components/Home';
 import { connect } from 'react-redux';
-import { initGame, putTileOnTable, undoTable, setPicked, submit, toggleAiTurn } from '../actions/scrabble';
+import { initGame, putTileOnTable, undoTable, setPicked, submit, toggleAiTurn, swapRack } from '../actions/scrabble';
 
 function mapStateToProps(state) {
 	return {
@@ -16,7 +16,8 @@ function mapDispatchToProps(dispatch) {
 		undoTable: () => dispatch(undoTable()),
 		setPicked: (index, picked) => dispatch(setPicked(index, picked)),
 		submit: () => dispatch(submit()),
-		toggleAiTurn: (turn) => dispatch(toggleAiTurn(turn))
+		toggleAiTurn: (turn) => dispatch(toggleAiTurn(turn)),
+		swapRack: () => dispatch(swapRack())
 	};
 }
 

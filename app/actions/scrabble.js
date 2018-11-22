@@ -63,7 +63,7 @@ export const initGame = (playerCount) => (dispatch, getState) => {
 	});
 	dispatch(startGame());
 
-	setTimeout(() => dispatch(runAi()), 100);
+	setTimeout(() => dispatch(runAi()), 10);
 };
 
 export const putTileOnTable = (i, j, char) => {
@@ -90,7 +90,6 @@ export const submit = () => {
 		const newRacks = _.cloneDeep(racks);
 
 		const valid_move = getValidMoves(tableHistory[offset + 1], table);
-		// console.log('played', valid_move);
 		if (valid_move.length > 0) {
 			const newPoint = points[currentPlayer] + valid_move.reduce((acc, word) => acc + word.length, 0);
 			const { rack, newSack } = refillRack(newRacks[currentPlayer], picked[currentPlayer], sack);
@@ -102,12 +101,29 @@ export const submit = () => {
 			dispatch(emptyPicked());
 			dispatch(setPoint(currentPlayer, newPoint));
 			dispatch(changeTurn());
-
-			dispatch(runAi());
+			setTimeout(() => dispatch(runAi()), 10);
 		} else {
 			alert('NOT VALID');
 		}
 	};
+};
+
+export const swapRack = () => (dispatch, getState) => {
+	const { scrabble } = getState();
+	const { sack, racks, currentPlayer, tableHistory, offset } = scrabble;
+
+	const newRacks = _.cloneDeep(racks);
+	newRacks[currentPlayer].forEach((el) => sack[el]++);
+	const { rack, newSack } = refillRack(newRacks[currentPlayer], [ 0, 1, 2, 3, 4, 5, 6 ], sack);
+
+	dispatch(setRacks(newRacks));
+	dispatch(setSack(newSack));
+
+	while (offset + 1 !== tableHistory.length) {
+		dispatch(undoTable());
+	}
+	dispatch(changeTurn());
+	setTimeout(() => dispatch(runAi()), 10);
 };
 
 const runAi = () => (dispatch, getState) => {
@@ -120,10 +136,11 @@ const runAi = () => (dispatch, getState) => {
 		const best = DAWG_AI.best(table, racks[currentPlayer], racks[otherPlayer]);
 		// console.log(table, racks);
 		// console.log(currentPlayer, best);
+		let tmp = table;
 		if (best.length > 0) {
-			const newTable = _.cloneDeep(table);
-			const promises = best.map((word) => {
+			const promises = best.forEach((word) => {
 				const [ char, row, column ] = word;
+				const newTable = _.cloneDeep(tmp);
 				if (!newTable[row][column]) {
 					const rackIndex = racks[currentPlayer].reduce((acc, el, index) => {
 						if (acc > -1) {
@@ -133,14 +150,20 @@ const runAi = () => (dispatch, getState) => {
 						return char === el ? index : acc;
 					}, -1);
 					newTable[row][column] = char;
+					tmp = newTable;
 
-					return dispatch(setPicked(currentPlayer, [ rackIndex ]));
+					dispatch(setPicked(currentPlayer, [ rackIndex ]));
+					dispatch(setTable(newTable));
 				}
 			});
 
-			Promise.all(promises).then(() => dispatch(setTable(newTable))).then(() => dispatch(submit()));
+			dispatch(submit());
 		} else {
-			alert('no move');
+			if (racks[currentPlayer].length < 7) {
+				alert('SURRENDER');
+			} else {
+				dispatch(swapRack());
+			}
 		}
 	}
 };
