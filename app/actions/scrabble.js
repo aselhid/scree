@@ -1,5 +1,9 @@
 import _ from 'lodash';
+import AI from '../utils/AI';
 import { generateRandomRacks, getValidMoves, validateMove, refillRack } from '../utils/scrabble';
+import { dawg_dictionary } from '../utils/scrabble';
+
+const DAWG_AI = new AI(dawg_dictionary);
 
 export const START_GAME = 'scrabble/START_GAME';
 export const SET_SACK = 'scrabble/SET_SACK';
@@ -7,6 +11,7 @@ export const SET_RACKS = 'scrabble/SET_RACKS';
 export const SET_TABLE = 'scrabble/SET_TABLE';
 export const SET_PICKED = 'scrabble/SET_PICKED';
 export const SET_POINT = 'scrabble/SET_POINT';
+export const TOGGLE_AI_TURN = 'scrabble/TOGGLE_AI_TURN';
 export const UNDO_TABLE = 'scrabble/UNDO_TABLE';
 export const UPDATE_OFFSET = 'scrabble/UPDATE_OFFSET';
 export const CHANGE_TURN = 'scrabble/CHANGE_TURN';
@@ -43,19 +48,23 @@ export const setPoint = (index, point) => ({
 	point
 });
 
-export const initGame = (playerCount) => {
-	return (dispatch, getState) => {
-		const { scrabble } = getState();
-		const { sack, racks } = generateRandomRacks(scrabble.sack, playerCount);
+export const toggleAiTurn = (turn) => ({
+	type: TOGGLE_AI_TURN,
+	turn
+});
 
-		dispatch(startGame());
-		dispatch(setSack(sack));
-		dispatch(setRacks(racks));
-		[ ...Array(playerCount).keys() ].forEach((i) => {
-			dispatch(setPicked(i, []));
-			dispatch(setPoint(i, 0));
-		});
-	};
+export const initGame = (playerCount) => (dispatch, getState) => {
+	const { scrabble } = getState();
+	const { sack, racks } = generateRandomRacks(scrabble.sack, playerCount);
+
+	dispatch(setSack(sack));
+	dispatch(setRacks(racks));
+	[ ...Array(playerCount).keys() ].forEach((i) => {
+		dispatch(setPicked(i, []));
+		dispatch(setPoint(i, 0));
+	});
+	dispatch(startGame());
+	dispatch(runAi());
 };
 
 export const putTileOnTable = (i, j, char) => {
@@ -92,10 +101,25 @@ export const submit = () => {
 			dispatch(emptyPicked());
 			dispatch(changeTurn());
 			dispatch(setPoint(currentPlayer, newPoint));
+			dispatch(runAi());
 		} else {
 			alert('NOT VALID');
 		}
 	};
+};
+
+const runAi = () => (dispatch, getState) => {
+	const { scrabble } = getState();
+	const { aiTurns, currentPlayer, table, racks } = scrabble;
+	const otherPlayer = (currentPlayer + 1) % 2;
+
+	if (aiTurns.includes(currentPlayer)) {
+		const best = DAWG_AI.best(table, racks[currentPlayer], racks[otherPlayer]);
+
+		best.forEach((element) => {
+			console.log(element);
+		});
+	}
 };
 
 export const updateOffset = () => ({
