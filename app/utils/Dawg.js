@@ -56,8 +56,6 @@ export class Dawg {
         DAWG builder
     */
 	buildAutomaton(words) {
-		words.sort();
-
 		for (var i = 0; i < words.length; i++) {
 			var word = words[i];
 
