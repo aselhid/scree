@@ -3,8 +3,6 @@ import AI from '../utils/AI';
 import { generateRandomRacks, getValidMoves, validateMove, refillRack } from '../utils/scrabble';
 import { dawg_dictionary } from '../utils/scrabble';
 
-const DAWG_AI = new AI(dawg_dictionary);
-
 export const START_GAME = 'scrabble/START_GAME';
 export const SET_SACK = 'scrabble/SET_SACK';
 export const SET_RACKS = 'scrabble/SET_RACKS';
@@ -64,7 +62,8 @@ export const initGame = (playerCount) => (dispatch, getState) => {
 		dispatch(setPoint(i, 0));
 	});
 	dispatch(startGame());
-	dispatch(runAi());
+
+	setTimeout(() => dispatch(runAi()), 100);
 };
 
 export const putTileOnTable = (i, j, char) => {
@@ -88,19 +87,22 @@ export const submit = () => {
 	return (dispatch, getState) => {
 		const { scrabble } = getState();
 		const { table, tableHistory, offset, racks, currentPlayer, sack, picked, points } = scrabble;
+		const newRacks = _.cloneDeep(racks);
 
 		const valid_move = getValidMoves(tableHistory[offset + 1], table);
+		// console.log('played', valid_move);
 		if (valid_move.length > 0) {
 			const newPoint = points[currentPlayer] + valid_move.reduce((acc, word) => acc + word.length, 0);
-			const { rack, newSack } = refillRack(racks[currentPlayer], picked[currentPlayer], sack);
-			racks[currentPlayer] = rack;
+			const { rack, newSack } = refillRack(newRacks[currentPlayer], picked[currentPlayer], sack);
+			newRacks[currentPlayer] = rack;
 
 			dispatch(updateOffset());
-			dispatch(setRacks(racks));
+			dispatch(setRacks(newRacks));
 			dispatch(setSack(newSack));
 			dispatch(emptyPicked());
-			dispatch(changeTurn());
 			dispatch(setPoint(currentPlayer, newPoint));
+			dispatch(changeTurn());
+
 			dispatch(runAi());
 		} else {
 			alert('NOT VALID');
@@ -109,32 +111,37 @@ export const submit = () => {
 };
 
 const runAi = () => (dispatch, getState) => {
+	const DAWG_AI = new AI(dawg_dictionary);
 	const { scrabble } = getState();
 	const { aiTurns, currentPlayer, table, racks, picked } = scrabble;
 	const otherPlayer = (currentPlayer + 1) % 2;
 
 	if (aiTurns.includes(currentPlayer)) {
 		const best = DAWG_AI.best(table, racks[currentPlayer], racks[otherPlayer]);
-		const newTable = _.cloneDeep(table);
+		// console.log(table, racks);
+		// console.log(currentPlayer, best);
+		if (best.length > 0) {
+			const newTable = _.cloneDeep(table);
+			const promises = best.map((word) => {
+				const [ char, row, column ] = word;
+				if (!newTable[row][column]) {
+					const rackIndex = racks[currentPlayer].reduce((acc, el, index) => {
+						if (acc > -1) {
+							return acc;
+						}
 
-		best.forEach((word) => {
-			const [ char, row, column ] = word;
-			if (!table[row][column]) {
-				const rackIndex = racks[currentPlayer].reduce((acc, el, index) => {
-					if (acc > -1) {
-						return acc;
-					}
+						return char === el ? index : acc;
+					}, -1);
+					newTable[row][column] = char;
 
-					return char === el ? index : acc;
-				}, -1);
-				newTable[row][column] = char;
+					return dispatch(setPicked(currentPlayer, [ rackIndex ]));
+				}
+			});
 
-				dispatch(setPicked(currentPlayer, [ rackIndex ]));
-			}
-		});
-
-		dispatch(setTable(newTable));
-		dispatch(submit());
+			Promise.all(promises).then(() => dispatch(setTable(newTable))).then(() => dispatch(submit()));
+		} else {
+			alert('no move');
+		}
 	}
 };
 

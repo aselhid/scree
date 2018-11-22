@@ -52,11 +52,13 @@ export const getValidMoves = (table_before, table_after) => {
 	);
 	const one_axis = isOneAxis(new_chars_index);
 
+	// console.log('validate table state', new_chars_index.length, connected_to_mid, one_axis);
 	if (new_chars_index.length === 0 || !connected_to_mid || !one_axis) {
 		return [];
 	}
 
 	const played_words = getPlayedWords(new_chars_index, table_after);
+	// console.log('validation', played_words);
 	return played_words.filter((element) => dawg_dictionary.contains(element));
 };
 
@@ -113,16 +115,21 @@ const getNewCharsIndex = (table_before, table_after) => {
 };
 
 const isOneAxis = (new_chars) => {
-	const averages = new_chars.reduce(
-		(acc, index) => {
-			const [ i, j ] = indexToCoord(index);
+	const averages = new_chars
+		.reduce(
+			(acc, index) => {
+				const [ i, j ] = indexToCoord(index);
 
-			return [ acc[0] + i / new_chars.length, acc[1] + j / new_chars.length ];
-		},
-		[ 0, 0 ]
+				return [ acc[0] + i, acc[1] + j ];
+			},
+			[ 0, 0 ]
+		)
+		.map((el) => el / new_chars.length);
+
+	return (
+		new_chars.length > 0 &&
+		indexToCoord(new_chars[0]).reduce((acc, next, index) => acc || next === averages[index], false)
 	);
-
-	return indexToCoord(new_chars[0]).reduce((acc, next, index) => acc || next === averages[index], false);
 };
 
 const getPlayedWords = (new_chars_index, table) => {

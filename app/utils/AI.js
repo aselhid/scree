@@ -13,6 +13,7 @@ export default class AI {
 	}
 
 	best(table, myRack, foeRack) {
+		console.log('ai', table, myRack, foeRack);
 		let moves = [];
 		// generating accross moves
 		moves = moves.concat(this.generateMoves(table, myRack, 0));
@@ -35,7 +36,10 @@ export default class AI {
 				}
 			}
 		}
-		return this.toAnswer(optimumMove);
+
+		const ans = this.toAnswer(optimumMove);
+		console.log(ans);
+		return ans;
 	}
 
 	toAnswer(move) {
@@ -137,6 +141,7 @@ export default class AI {
 					}
 				}
 			}
+			if (i == 7 && table[i][7] === null) anchors.push(7);
 			// coba bikin kata dari semua anchor
 			for (let j = 0; j < anchors.length; j++) {
 				let limit = anchors[0];
