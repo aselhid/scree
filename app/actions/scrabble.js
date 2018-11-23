@@ -86,7 +86,12 @@ export const undoTable = () => ({
 export const submit = () => {
 	return (dispatch, getState) => {
 		const { scrabble } = getState();
-		const { table, tableHistory, offset, racks, currentPlayer, sack, picked, points } = scrabble;
+		const { table, tableHistory, offset, racks, currentPlayer, sack, picked, points, started } = scrabble;
+
+		if (!started) {
+			return;
+		}
+
 		const newRacks = _.cloneDeep(racks);
 
 		const valid_move = getValidMoves(tableHistory[offset + 1], table);
@@ -160,7 +165,7 @@ const runAi = () => (dispatch, getState) => {
 			dispatch(submit());
 		} else {
 			if (racks[currentPlayer].length < 7) {
-				alert('SURRENDER');
+				alert('NO MORE MOVE FOR ME');
 			} else {
 				dispatch(swapRack());
 			}

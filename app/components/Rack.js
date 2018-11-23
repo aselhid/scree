@@ -27,6 +27,7 @@ export default class Rack extends Component {
 					<div
 						className={`${styles.tile} ${trClass} ${picked.includes(i) ? styles.brown : ''}`}
 						onClick={() => this.onTileClicked(i, char)}
+						key={`rack-${i}`}
 					>
 						<h2>{char}</h2>
 					</div>

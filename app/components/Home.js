@@ -10,8 +10,6 @@ export default class Home extends Component {
 		super(props);
 
 		this.state = {
-			playerCount: 2,
-			pickedChar: null,
 			aiTurns: []
 		};
 
@@ -21,20 +19,25 @@ export default class Home extends Component {
 	}
 
 	onTileClicked(i, j) {
-		const { pickedChar } = this.state;
-		const { putTileOnTable } = this.props;
+		const { putTileOnTable, scrabble } = this.props;
+		const { picked, currentPlayer, offset, tableHistory, racks } = scrabble;
+		const currentPicked = picked[currentPlayer];
+		const picking = currentPicked.length !== tableHistory.length - offset - 1;
+		const pickedChar = racks[currentPlayer][currentPicked[currentPicked.length - 1]];
 
-		if (!!pickedChar) {
+		if (picking) {
 			putTileOnTable(i, j, pickedChar);
-			this.setState({ pickedChar: null });
 		}
 	}
 
 	onRackClicked(i) {
+		const { scrabble, setPicked } = this.props;
+		const { picked, currentPlayer, offset, tableHistory } = scrabble;
+		const picking = picked[currentPlayer].length !== tableHistory.length - offset - 1;
+
 		return (ri, char) => {
-			if (!this.state.pickedChar) {
-				this.props.setPicked(i, [ ri ]);
-				this.setState({ pickedChar: char });
+			if (!picking) {
+				setPicked(i, [ ri ]);
 			}
 		};
 	}
@@ -47,7 +50,6 @@ export default class Home extends Component {
 	render() {
 		const { racks, table, started, currentPlayer, picked, points } = this.props.scrabble;
 		const { undoTable, submit, initGame, swapRack } = this.props;
-		const { playerCount } = this.state;
 
 		return (
 			<div>
@@ -57,9 +59,9 @@ export default class Home extends Component {
 						<button onClick={undoTable}>Undo</button>
 						<button onClick={swapRack}>Swap</button>
 						<button onClick={submit}>Submit</button>
-						{points.map((element, index) => (
-							<h3>
-								Pemain {index} : {element}
+						{points.map((point, index) => (
+							<h3 key={`label-${index}`}>
+								Pemain {index} : {point}
 							</h3>
 						))}
 						{racks ? (
@@ -69,6 +71,7 @@ export default class Home extends Component {
 									callback={this.onRackClicked(i)}
 									activeRack={currentPlayer === i}
 									picked={picked[i]}
+									key={`rack-${i}`}
 								/>
 							))
 						) : null}
@@ -76,9 +79,9 @@ export default class Home extends Component {
 				)}
 				{!started && (
 					<div>
-						<label for="turn1">Turn 1</label>
+						<label htmlFor="turn1">Turn 1</label>
 						<input id="turn1" type="checkbox" name="Turn 1" value="0" onChange={this.onCheckboxChange} />
-						<label for="turn2">Turn 2</label>
+						<label htmlFor="turn2">Turn 2</label>
 						<input id="turn2" type="checkbox" name="Turn 2" value="1" onChange={this.onCheckboxChange} />
 						<button onClick={() => initGame(2)} disabled={started}>
 							Start

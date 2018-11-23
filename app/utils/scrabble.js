@@ -46,7 +46,7 @@ export const getValidMoves = (table_before, table_after) => {
 	const flat_table_after = _.flatten(table_after);
 	const new_chars_index = getNewCharsIndex(table_before, table_after);
 
-	console.log(table_after, flooded);
+	// console.log(table_after, flooded);
 	const connected_to_mid = flat_table_after.reduce((acc, next, index) => {
 		if (next && !flooded.includes(index)) {
 			console.log(next, index);
@@ -56,13 +56,13 @@ export const getValidMoves = (table_before, table_after) => {
 	}, true);
 	const one_axis = isOneAxis(new_chars_index);
 
-	console.log('validate table state', new_chars_index.length, connected_to_mid, one_axis);
+	// console.log('validate table state', new_chars_index.length, connected_to_mid, one_axis);
 	if (new_chars_index.length === 0 || !connected_to_mid || !one_axis) {
 		return [];
 	}
 
 	const played_words = getPlayedWords(new_chars_index, table_after);
-	console.log('validation', played_words);
+	// console.log('validation', played_words);
 	const filtered = played_words.filter((element) => dawg_dictionary.contains(element));
 	return filtered.length === played_words.length ? filtered : [];
 };

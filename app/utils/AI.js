@@ -13,7 +13,7 @@ export default class AI {
 	}
 
 	best(table, myRack, foeRack) {
-		console.log('ai', table, myRack, foeRack);
+		// console.log('ai', table, myRack, foeRack);
 		let moves = [];
 		// generating accross moves
 		moves = moves.concat(this.generateMoves(table, myRack, 0));
@@ -38,7 +38,7 @@ export default class AI {
 		}
 
 		const ans = this.toAnswer(optimumMove);
-		console.log(ans);
+		// console.log(ans);
 		return ans;
 	}
 
