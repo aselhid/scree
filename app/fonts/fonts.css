@@ -1,0 +1,12 @@
+@font-face {
+    font-family: 'Ubuntu';
+    font-style: normal;
+    font-weight: 400;
+    src: url(Ubuntu_400_normal.eot); /* http://fonts.gstatic.com/s/ubuntu/v12/4iCs6KVjbNBYlgoKfw7y.eot */
+    src: local('☺'),
+        url(Ubuntu_400_normal.eot?#iefix) format('embedded-opentype'), /* http://fonts.gstatic.com/s/ubuntu/v12/4iCs6KVjbNBYlgoKfw7y.eot */
+        url(Ubuntu_400_normal.woff2) format('woff2'), /* http://fonts.gstatic.com/s/ubuntu/v12/4iCs6KVjbNBYlgoKfw72.woff2 */
+        url(Ubuntu_400_normal.woff) format('woff'), /* http://fonts.gstatic.com/s/ubuntu/v12/4iCs6KVjbNBYlgoKfw7w.woff */
+        url(Ubuntu_400_normal.ttf) format('truetype'), /* http://fonts.gstatic.com/s/ubuntu/v12/4iCs6KVjbNBYlgoKfw7znU6AFw.ttf */
+        url(Ubuntu_400_normal.svg#Ubuntu_400_normal) format('svg'); /* http://fonts.gstatic.com/l/font?kit=4iCs6KVjbNBYlgoKfw7x&skey=7e59fc036a1a8481&v=v12#Ubuntu */
+}

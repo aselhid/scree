@@ -14,6 +14,7 @@ export const UNDO_TABLE = 'scrabble/UNDO_TABLE';
 export const UPDATE_OFFSET = 'scrabble/UPDATE_OFFSET';
 export const CHANGE_TURN = 'scrabble/CHANGE_TURN';
 export const EMPTY_PICKED = 'scrabble/EMPTY_PICKED';
+export const TOGGLE_THONKING = 'THONNKKING';
 
 const startGame = () => ({
 	type: START_GAME
@@ -138,7 +139,9 @@ const runAi = () => (dispatch, getState) => {
 	const otherPlayer = (currentPlayer + 1) % 2;
 
 	if (aiTurns.includes(currentPlayer)) {
+		dispatch(thonking());
 		const best = DAWG_AI.best(table, racks[currentPlayer], racks[otherPlayer]);
+		dispatch(thonking());
 		// console.log(table, racks);
 		// console.log(currentPlayer, best);
 		let tmp = table;
@@ -183,4 +186,8 @@ export const changeTurn = () => ({
 
 export const emptyPicked = () => ({
 	type: EMPTY_PICKED
+});
+
+export const thonking = () => ({
+	type: TOGGLE_THONKING
 });

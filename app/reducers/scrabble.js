@@ -10,7 +10,8 @@ import {
 	UNDO_TABLE,
 	UPDATE_OFFSET,
 	CHANGE_TURN,
-	EMPTY_PICKED
+	EMPTY_PICKED,
+	TOGGLE_THONKING
 } from '../actions/scrabble';
 import { TABLE_COL, TABLE_ROW } from '../utils/scrabble';
 
@@ -53,7 +54,8 @@ const initialState = {
 	table: emptyTable,
 	tableHistory: [],
 	offset: -1,
-	started: false
+	started: false,
+	thonking: false
 };
 
 export default function scrabbleReducer(state = initialState, action) {
@@ -109,6 +111,8 @@ export default function scrabbleReducer(state = initialState, action) {
 			picked = [ ...state.picked ];
 			picked[state.currentPlayer] = [];
 			return { ...state, picked };
+		case TOGGLE_THONKING:
+			return { ...state, thonking: !state.thonking };
 		default:
 			return state;
 	}

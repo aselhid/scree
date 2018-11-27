@@ -1,24 +1,33 @@
+.rackContainer {
+	display: flex;
+	margin: 0.1rem 0;
+	justify-content: center;
+}
+
 .rackContainer .tile {
-  display: inline-flex;
-  justify-content: center;
-  align-items: center;
-  width: 3rem;
-  height: 3rem;
-  border: 2px solid black;
-  background: lightblue;
-  margin: 0.1rem;
-  cursor: pointer;
+	display: inline-flex;
+	justify-content: center;
+	align-items: center;
+	width: calc(35vw / 15);
+	height: calc(35vw / 15);
+	background: #0f2949;
+	border-radius: 10%;
+	margin: 0.1rem;
+	cursor: pointer;
 }
 
 .rackContainer .tile > h2 {
-  display: inline-block;
-  color: black;
+	display: inline-block;
+	color: #5297ae;
+	font-size: 1.2vw;
+	text-transform: uppercase;
+	font-weight: 500;
 }
 
 .rackContainer .tile.transparent {
-  opacity: 0.25;
+	opacity: 0.25;
 }
 
 .rackContainer .tile.brown {
-  background: rgb(222, 184, 135);
+	background: #fcffff;
 }
