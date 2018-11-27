@@ -1,7 +1,8 @@
 import { DawgIterator } from '../utils/Dawg';
+import { dawg_dictionary } from '../utils/scrabble';
 import _ from 'lodash';
 
-export default class AI {
+class AI {
 	constructor(dawg) {
 		this.dawg = dawg;
 		this.possibleMoves; // 0: word, 1: x, 2: y, 3: score, 4: direction
@@ -288,3 +289,5 @@ export default class AI {
 		return newTable;
 	}
 }
+
+export const DAWG_AI = new AI(dawg_dictionary);

@@ -1,7 +1,7 @@
 import _ from 'lodash';
-import AI from '../utils/AI';
+import { ipcRenderer } from 'electron';
+import { DAWG_AI } from '../utils/AI';
 import { generateRandomRacks, getValidMoves, validateMove, refillRack } from '../utils/scrabble';
-import { dawg_dictionary } from '../utils/scrabble';
 
 export const START_GAME = 'scrabble/START_GAME';
 export const SET_SACK = 'scrabble/SET_SACK';
@@ -132,16 +132,17 @@ export const swapRack = () => (dispatch, getState) => {
 	setTimeout(() => dispatch(runAi()), 10);
 };
 
-const runAi = () => (dispatch, getState) => {
-	const DAWG_AI = new AI(dawg_dictionary);
+const runAi = () => async (dispatch, getState) => {
 	const { scrabble } = getState();
 	const { aiTurns, currentPlayer, table, racks, picked } = scrabble;
 	const otherPlayer = (currentPlayer + 1) % 2;
 
 	if (aiTurns.includes(currentPlayer)) {
 		dispatch(thonking());
+		await sleep(10);
 		const best = DAWG_AI.best(table, racks[currentPlayer], racks[otherPlayer]);
 		dispatch(thonking());
+
 		// console.log(table, racks);
 		// console.log(currentPlayer, best);
 		let tmp = table;
@@ -191,3 +192,5 @@ export const emptyPicked = () => ({
 export const thonking = () => ({
 	type: TOGGLE_THONKING
 });
+
+const sleep = (n) => new Promise((resolve) => setTimeout(resolve, n));

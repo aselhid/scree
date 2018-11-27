@@ -3,7 +3,6 @@ import React, { Component } from 'react';
 import styles from './Home.css';
 import Table from '../components/Table';
 import Rack from '../components/Rack';
-import { dawg_dictionary } from '../utils/scrabble';
 import Thonking from '../tenor2.gif';
 
 export default class Home extends Component {
@@ -61,7 +60,7 @@ export default class Home extends Component {
 					<div>
 						<Table table={table} callback={this.onTileClicked} />
 						<div className={styles.buttonsContainer}>
-							<h3>{`${points[0]} vs ${points[1]}`}</h3>
+							<h3>{`${points[0]} : ${points[1]}`}</h3>
 							<div>
 								<button disabled={currentlyAi} onClick={undoTable}>
 									Undo
