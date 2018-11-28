@@ -15,6 +15,8 @@ export const UPDATE_OFFSET = 'scrabble/UPDATE_OFFSET';
 export const CHANGE_TURN = 'scrabble/CHANGE_TURN';
 export const EMPTY_PICKED = 'scrabble/EMPTY_PICKED';
 export const TOGGLE_THONKING = 'THONNKKING';
+export const SURRENDER = 'scrabble/SURRENDER';
+export const END_GAME = 'scrabble/END_GAME';
 
 const startGame = () => ({
 	type: START_GAME
@@ -119,7 +121,7 @@ export const swapRack = () => (dispatch, getState) => {
 	const { sack, racks, currentPlayer, tableHistory, offset } = scrabble;
 
 	const newRacks = _.cloneDeep(racks);
-	newRacks[currentPlayer].forEach((el) => sack[el]++);
+	racks[currentPlayer].forEach((el) => sack[el]++);
 	const { rack, newSack } = refillRack(newRacks[currentPlayer], [ 0, 1, 2, 3, 4, 5, 6 ], sack);
 
 	dispatch(setRacks(newRacks));
@@ -170,6 +172,7 @@ const runAi = () => async (dispatch, getState) => {
 		} else {
 			if (racks[currentPlayer].length < 7) {
 				alert('NO MORE MOVE FOR ME');
+				dispatch(surrender());
 			} else {
 				dispatch(swapRack());
 			}
@@ -177,12 +180,29 @@ const runAi = () => async (dispatch, getState) => {
 	}
 };
 
+export const surrender = () => (dispatch) => {
+	dispatch({ type: SURRENDER });
+	dispatch(changeTurn());
+};
+
 export const updateOffset = () => ({
 	type: UPDATE_OFFSET
 });
 
-export const changeTurn = () => ({
-	type: CHANGE_TURN
+export const changeTurn = () => (dispatch, getState) => {
+	const { scrabble } = getState();
+	const { surrendered, currentPlayer } = scrabble;
+	const nextPlayer = (currentPlayer + 1) % 2;
+
+	if (surrendered.length > 0) {
+		dispatch(endGame());
+	} else {
+		dispatch({ type: CHANGE_TURN });
+	}
+};
+
+export const endGame = () => ({
+	type: END_GAME
 });
 
 export const emptyPicked = () => ({

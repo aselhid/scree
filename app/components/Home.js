@@ -1,5 +1,6 @@
 // @flow
 import React, { Component } from 'react';
+import { remote } from 'electron';
 import styles from './Home.css';
 import Table from '../components/Table';
 import Rack from '../components/Rack';
@@ -48,7 +49,17 @@ export default class Home extends Component {
 	}
 
 	render() {
-		const { racks, table, started, currentPlayer, picked, points, aiTurns, thonking } = this.props.scrabble;
+		const {
+			racks,
+			table,
+			started,
+			currentPlayer,
+			picked,
+			points,
+			aiTurns,
+			thonking,
+			endGame
+		} = this.props.scrabble;
 		const { undoTable, submit, initGame, swapRack } = this.props;
 
 		const currentlyAi = aiTurns.includes(currentPlayer);
@@ -56,12 +67,15 @@ export default class Home extends Component {
 		return (
 			<div className={styles.container}>
 				<img src={Thonking} className={loadingClass} />
-				{started && (
+				{started &&
+				!endGame && (
 					<div>
 						<Table table={table} callback={this.onTileClicked} />
 						<div className={styles.buttonsContainer}>
 							<h3>{`${points[0]} : ${points[1]}`}</h3>
 							<div>
+								<button onClick={() => remote.getCurrentWindow().reload()}>Restart</button>
+								<button onClick={this.props.surrender}>Surrender</button>
 								<button disabled={currentlyAi} onClick={undoTable}>
 									Undo
 								</button>
@@ -84,30 +98,24 @@ export default class Home extends Component {
 						) : null}
 					</div>
 				)}
-				{!started && (
-					<div>
-						<div className={styles.checkbox}>
-							<input
-								id="turn1"
-								type="checkbox"
-								name="Turn 1"
-								value="0"
-								onChange={this.onCheckboxChange}
-							/>
-							<label htmlFor="turn1">Turn 1</label>
-						</div>
-						<div className={styles.checkbox}>
-							<input
-								id="turn2"
-								type="checkbox"
-								name="Turn 2"
-								value="1"
-								onChange={this.onCheckboxChange}
-							/>
-							<label htmlFor="turn2">Turn 2</label>
-						</div>
+				{!started &&
+				!endGame && (
+					<div className={`${styles.container} ${styles.startGame}`}>
+						<h1 className={styles.title}>Scree</h1>
 						<button
-							className={`${styles.greenButton} ${styles.startButton}`}
+							className={`${styles.toggleAi} ${aiTurns.includes(0) ? styles.red : styles.yellow}`}
+							onClick={() => this.props.toggleAiTurn(0)}
+						>
+							Player 1 : {aiTurns.includes(0) ? 'AI' : 'Human'}
+						</button>
+						<button
+							className={`${styles.toggleAi} ${aiTurns.includes(1) ? styles.red : styles.yellow}`}
+							onClick={() => this.props.toggleAiTurn(1)}
+						>
+							Player 2 : {aiTurns.includes(1) ? 'AI' : 'Human'}
+						</button>
+						<button
+							className={`${styles.greenButton} ${styles.toggleAi}`}
 							onClick={() => initGame(2)}
 							disabled={started}
 						>
@@ -115,6 +123,7 @@ export default class Home extends Component {
 						</button>
 					</div>
 				)}
+				{endGame && <h1>Pemenangnya adalah {points[0] > points[1] ? 'Player 1' : 'Player 2'}</h1>}
 			</div>
 		);
 	}

@@ -11,9 +11,11 @@ import {
 	UPDATE_OFFSET,
 	CHANGE_TURN,
 	EMPTY_PICKED,
-	TOGGLE_THONKING
+	TOGGLE_THONKING,
+	SURRENDER,
+	END_GAME
 } from '../actions/scrabble';
-import { TABLE_COL, TABLE_ROW } from '../utils/scrabble';
+import { TABLE_COL, TABLE_ROW, uniq } from '../utils/scrabble';
 
 const emptyTable = [ ...Array(TABLE_ROW).keys() ].map((e) => [ ...Array(TABLE_COL).keys() ].map((f) => null));
 
@@ -50,12 +52,14 @@ const initialState = {
 	picked: [],
 	points: [],
 	aiTurns: [],
+	surrendered: [],
 	currentPlayer: 0,
 	table: emptyTable,
 	tableHistory: [],
 	offset: -1,
 	started: false,
-	thonking: false
+	thonking: false,
+	endGame: false
 };
 
 export default function scrabbleReducer(state = initialState, action) {
@@ -113,6 +117,10 @@ export default function scrabbleReducer(state = initialState, action) {
 			return { ...state, picked };
 		case TOGGLE_THONKING:
 			return { ...state, thonking: !state.thonking };
+		case SURRENDER:
+			return { ...state, surrendered: uniq([ ...state.surrendered, state.currentPlayer ]) };
+		case END_GAME:
+			return { ...state, endGame: true };
 		default:
 			return state;
 	}

@@ -192,7 +192,7 @@ const getPlayedWords = (new_chars_index, table) => {
 	);
 };
 
-const uniq = (a) => {
+export const uniq = (a) => {
 	const seen = {};
 
 	return a.filter((element) => (seen.hasOwnProperty(element) ? false : (seen[element] = true)));
