@@ -27,9 +27,9 @@ class Node {
 export class Dawg {
   constructor() {
   	let fs = require('fs');
-    this.transitionCharacterList = JSON.parse(fs.readFileSync('transitionCharacterList.json')).data;
-    this.childList = JSON.parse(fs.readFileSync('childList.json')).data;
-    this.endOfWordList = JSON.parse(fs.readFileSync('endOfWordList.json')).data;
+    this.transitionCharacterList = JSON.parse(fs.readFileSync('./app/utils/transitionCharacterList.json')).data;
+    this.childList = JSON.parse(fs.readFileSync('./app/utils/childList.json')).data;
+    this.endOfWordList = JSON.parse(fs.readFileSync('./app/utils/endOfWordList.json')).data;
     this.nodeList = [];
 
     this.size = this.endOfWordList.length;
