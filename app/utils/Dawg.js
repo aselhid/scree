@@ -75,7 +75,7 @@ export class Dawg {
 /**
     DAWG Iterator
 */
-class DawgIterator {
+export class DawgIterator {
   constructor(dawg) {
     this.dawg = dawg;
     this.currentNode = dawg.root;

@@ -9,13 +9,14 @@ export default class Table extends Component {
 		return (
 			<div className={styles.tableContainer}>
 				{table.map((row, i) => (
-					<div className={styles.row}>
+					<div className={styles.row} key={`row-${i}`}>
 						{row.map((column, j) => (
 							<div
 								className={`${styles.tile} ${i == 7 && j == 7 && styles.blue} ${column
 									? styles.brown
 									: ''}`}
 								onClick={() => callback(i, j)}
+								key={`col-${j}`}
 							>
 								<h2>{column}</h2>
 							</div>

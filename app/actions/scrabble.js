@@ -1,9 +1,7 @@
 import _ from 'lodash';
-import AI from '../utils/AI';
+import { ipcRenderer } from 'electron';
+import { DAWG_AI } from '../utils/AI';
 import { generateRandomRacks, getValidMoves, validateMove, refillRack } from '../utils/scrabble';
-import { dawg_dictionary } from '../utils/scrabble';
-
-const DAWG_AI = new AI(dawg_dictionary);
 
 export const START_GAME = 'scrabble/START_GAME';
 export const SET_SACK = 'scrabble/SET_SACK';
@@ -16,6 +14,9 @@ export const UNDO_TABLE = 'scrabble/UNDO_TABLE';
 export const UPDATE_OFFSET = 'scrabble/UPDATE_OFFSET';
 export const CHANGE_TURN = 'scrabble/CHANGE_TURN';
 export const EMPTY_PICKED = 'scrabble/EMPTY_PICKED';
+export const TOGGLE_THONKING = 'THONNKKING';
+export const SURRENDER = 'scrabble/SURRENDER';
+export const END_GAME = 'scrabble/END_GAME';
 
 const startGame = () => ({
 	type: START_GAME
@@ -64,7 +65,8 @@ export const initGame = (playerCount) => (dispatch, getState) => {
 		dispatch(setPoint(i, 0));
 	});
 	dispatch(startGame());
-	dispatch(runAi());
+
+	setTimeout(() => dispatch(runAi()), 10);
 };
 
 export const putTileOnTable = (i, j, char) => {
@@ -87,49 +89,128 @@ export const undoTable = () => ({
 export const submit = () => {
 	return (dispatch, getState) => {
 		const { scrabble } = getState();
-		const { table, tableHistory, offset, racks, currentPlayer, sack, picked, points } = scrabble;
+		const { table, tableHistory, offset, racks, currentPlayer, sack, picked, points, started } = scrabble;
+
+		if (!started) {
+			return;
+		}
+
+		const newRacks = _.cloneDeep(racks);
 
 		const valid_move = getValidMoves(tableHistory[offset + 1], table);
 		if (valid_move.length > 0) {
 			const newPoint = points[currentPlayer] + valid_move.reduce((acc, word) => acc + word.length, 0);
-			const { rack, newSack } = refillRack(racks[currentPlayer], picked[currentPlayer], sack);
-			racks[currentPlayer] = rack;
+			const { rack, newSack } = refillRack(newRacks[currentPlayer], picked[currentPlayer], sack);
+			newRacks[currentPlayer] = rack;
 
 			dispatch(updateOffset());
-			dispatch(setRacks(racks));
+			dispatch(setRacks(newRacks));
 			dispatch(setSack(newSack));
 			dispatch(emptyPicked());
-			dispatch(changeTurn());
 			dispatch(setPoint(currentPlayer, newPoint));
-			dispatch(runAi());
+			dispatch(changeTurn());
+			setTimeout(() => dispatch(runAi()), 10);
 		} else {
 			alert('NOT VALID');
 		}
 	};
 };
 
-const runAi = () => (dispatch, getState) => {
+export const swapRack = () => (dispatch, getState) => {
 	const { scrabble } = getState();
-	const { aiTurns, currentPlayer, table, racks } = scrabble;
+	const { sack, racks, currentPlayer, tableHistory, offset } = scrabble;
+
+	const newRacks = _.cloneDeep(racks);
+	racks[currentPlayer].forEach((el) => sack[el]++);
+	const { rack, newSack } = refillRack(newRacks[currentPlayer], [ 0, 1, 2, 3, 4, 5, 6 ], sack);
+
+	dispatch(setRacks(newRacks));
+	dispatch(setSack(newSack));
+
+	while (offset + 1 !== tableHistory.length) {
+		dispatch(undoTable());
+	}
+	dispatch(changeTurn());
+	setTimeout(() => dispatch(runAi()), 10);
+};
+
+const runAi = () => async (dispatch, getState) => {
+	const { scrabble } = getState();
+	const { aiTurns, currentPlayer, table, racks, picked } = scrabble;
 	const otherPlayer = (currentPlayer + 1) % 2;
 
 	if (aiTurns.includes(currentPlayer)) {
+		dispatch(thonking());
+		await sleep(10);
 		const best = DAWG_AI.best(table, racks[currentPlayer], racks[otherPlayer]);
+		dispatch(thonking());
 
-		best.forEach((element) => {
-			console.log(element);
-		});
+		// console.log(table, racks);
+		// console.log(currentPlayer, best);
+		let tmp = table;
+		if (best.length > 0) {
+			const promises = best.forEach((word) => {
+				const [ char, row, column ] = word;
+				const newTable = _.cloneDeep(tmp);
+				if (!newTable[row][column]) {
+					const rackIndex = racks[currentPlayer].reduce((acc, el, index) => {
+						if (acc > -1) {
+							return acc;
+						}
+
+						return char === el ? index : acc;
+					}, -1);
+					newTable[row][column] = char;
+					tmp = newTable;
+
+					dispatch(setPicked(currentPlayer, [ rackIndex ]));
+					dispatch(setTable(newTable));
+				}
+			});
+
+			dispatch(submit());
+		} else {
+			if (racks[currentPlayer].length < 7) {
+				alert('NO MORE MOVE FOR ME');
+				dispatch(surrender());
+			} else {
+				dispatch(swapRack());
+			}
+		}
 	}
+};
+
+export const surrender = () => (dispatch) => {
+	dispatch({ type: SURRENDER });
+	dispatch(changeTurn());
 };
 
 export const updateOffset = () => ({
 	type: UPDATE_OFFSET
 });
 
-export const changeTurn = () => ({
-	type: CHANGE_TURN
+export const changeTurn = () => (dispatch, getState) => {
+	const { scrabble } = getState();
+	const { surrendered, currentPlayer } = scrabble;
+	const nextPlayer = (currentPlayer + 1) % 2;
+
+	if (surrendered.length > 0) {
+		dispatch(endGame());
+	} else {
+		dispatch({ type: CHANGE_TURN });
+	}
+};
+
+export const endGame = () => ({
+	type: END_GAME
 });
 
 export const emptyPicked = () => ({
 	type: EMPTY_PICKED
 });
+
+export const thonking = () => ({
+	type: TOGGLE_THONKING
+});
+
+const sleep = (n) => new Promise((resolve) => setTimeout(resolve, n));

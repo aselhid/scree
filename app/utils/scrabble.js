@@ -5,7 +5,7 @@ import { Dawg } from './Dawg';
 export const TABLE_ROW = 15;
 export const TABLE_COL = 15;
 
-export const dawg_dictionary = new Dawg(dictionary);
+export const dawg_dictionary = new Dawg();
 
 export const generateRandomRacks = (sack, playerCount) => {
 	const racks = [];
@@ -46,18 +46,25 @@ export const getValidMoves = (table_before, table_after) => {
 	const flat_table_after = _.flatten(table_after);
 	const new_chars_index = getNewCharsIndex(table_before, table_after);
 
-	const connected_to_mid = flat_table_after.reduce(
-		(acc, next, index) => acc && (next ? flooded.includes(index) : true),
-		true
-	);
+	// console.log(table_after, flooded);
+	const connected_to_mid = flat_table_after.reduce((acc, next, index) => {
+		if (next && !flooded.includes(index)) {
+			console.log(next, index);
+		}
+
+		return acc && (next ? flooded.includes(index) : true);
+	}, true);
 	const one_axis = isOneAxis(new_chars_index);
 
+	// console.log('validate table state', new_chars_index.length, connected_to_mid, one_axis);
 	if (new_chars_index.length === 0 || !connected_to_mid || !one_axis) {
 		return [];
 	}
 
 	const played_words = getPlayedWords(new_chars_index, table_after);
-	return played_words.filter((element) => dawg_dictionary.contains(element));
+	// console.log('validation', played_words);
+	const filtered = played_words.filter((element) => dawg_dictionary.contains(element));
+	return filtered.length === played_words.length ? filtered : [];
 };
 
 export const refillRack = (rack, picked, sack) => {
@@ -113,16 +120,21 @@ const getNewCharsIndex = (table_before, table_after) => {
 };
 
 const isOneAxis = (new_chars) => {
-	const averages = new_chars.reduce(
-		(acc, index) => {
-			const [ i, j ] = indexToCoord(index);
+	const averages = new_chars
+		.reduce(
+			(acc, index) => {
+				const [ i, j ] = indexToCoord(index);
 
-			return [ acc[0] + i / new_chars.length, acc[1] + j / new_chars.length ];
-		},
-		[ 0, 0 ]
+				return [ acc[0] + i, acc[1] + j ];
+			},
+			[ 0, 0 ]
+		)
+		.map((el) => el / new_chars.length);
+
+	return (
+		new_chars.length > 0 &&
+		indexToCoord(new_chars[0]).reduce((acc, next, index) => acc || next === averages[index], false)
 	);
-
-	return indexToCoord(new_chars[0]).reduce((acc, next, index) => acc || next === averages[index], false);
 };
 
 const getPlayedWords = (new_chars_index, table) => {
@@ -180,12 +192,18 @@ const getPlayedWords = (new_chars_index, table) => {
 	);
 };
 
-const uniq = (a) => {
+export const uniq = (a) => {
 	const seen = {};
 
 	return a.filter((element) => (seen.hasOwnProperty(element) ? false : (seen[element] = true)));
 };
 
-const coordToIndex = (x, y) => x * 15 + y;
+const coordToIndex = (x, y) => {
+	if (x >= 15 || y >= 15 || x < 0 || y < 0) {
+		return -1;
+	}
+
+	return x * 15 + y;
+};
 
 const indexToCoord = (index) => [ Math.floor(index / TABLE_ROW), index % TABLE_ROW ];

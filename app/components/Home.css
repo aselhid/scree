@@ -1,7 +1,81 @@
+.container {
+	height: 100vh;
+	width: 100vw;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+.startGame {
+	flex-direction: column;
+}
+
+.buttonsContainer {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 0.25rem;
+}
+
 button {
 	margin: 0.25rem;
+	padding: 0.5rem 1.25rem;
+	font-size: 1rem;
+	border-radius: 1.5rem;
+	border: none;
+	letter-spacing: 0.1rem;
+	cursor: pointer;
+}
+
+button:focus {
+	outline: none;
 }
 
 h3 {
-	margin: 0.3rem;
+	font-weight: 300;
+	font-size: 1.5rem;
+	margin: 0;
+}
+
+.greenButton {
+	background: #00d969;
+	color: #fcffff;
+}
+
+.startButton {
+	display: block;
+}
+
+.title {
+	font-size: 15rem;
+	margin: 0;
+}
+
+label {
+	font-size: 1.25rem;
+}
+
+.toggleAi {
+	display: block;
+	color: #0f2949;
+	font-weight: 600;
+}
+
+.thonking {
+	display: block;
+	position: absolute;
+	width: 20vw;
+	z-index: 1000;
+}
+
+.hidden {
+	display: none;
+}
+
+.red {
+	background: #ff3247;
+}
+
+.yellow {
+	background: #ffce00;
 }

@@ -10,9 +10,12 @@ import {
 	UNDO_TABLE,
 	UPDATE_OFFSET,
 	CHANGE_TURN,
-	EMPTY_PICKED
+	EMPTY_PICKED,
+	TOGGLE_THONKING,
+	SURRENDER,
+	END_GAME
 } from '../actions/scrabble';
-import { TABLE_COL, TABLE_ROW } from '../utils/scrabble';
+import { TABLE_COL, TABLE_ROW, uniq } from '../utils/scrabble';
 
 const emptyTable = [ ...Array(TABLE_ROW).keys() ].map((e) => [ ...Array(TABLE_COL).keys() ].map((f) => null));
 
@@ -49,15 +52,18 @@ const initialState = {
 	picked: [],
 	points: [],
 	aiTurns: [],
+	surrendered: [],
 	currentPlayer: 0,
 	table: emptyTable,
 	tableHistory: [],
 	offset: -1,
-	started: false
+	started: false,
+	thonking: false,
+	endGame: false
 };
 
 export default function scrabbleReducer(state = initialState, action) {
-	let tableHistory, sack, racks, table, picked, points, aiTurns;
+	let tableHistory, sack, racks, table, picked, points, aiTurns, offset, currentPlayer;
 
 	switch (action.type) {
 		case START_GAME:
@@ -88,22 +94,33 @@ export default function scrabbleReducer(state = initialState, action) {
 		case UNDO_TABLE:
 			tableHistory = [ ...state.tableHistory ];
 			picked = [ ...state.picked ];
+			offset = state.offset;
 			table = state.table;
 
 			if (state.picked[state.currentPlayer].length > 0) {
+				table =
+					picked[state.currentPlayer].length === tableHistory.length - offset - 1
+						? tableHistory.pop()
+						: table;
 				picked[state.currentPlayer] = picked[state.currentPlayer].slice(0, -1);
-				table = tableHistory.pop();
 			}
 			return { ...state, tableHistory, table, picked };
 		case UPDATE_OFFSET:
-			tableHistory = state.tableHistory;
-			return { ...state, offset: tableHistory.length - 1 };
+			offset = state.tableHistory.length - 1;
+			return { ...state, offset };
 		case CHANGE_TURN:
-			return { ...state, currentPlayer: (state.currentPlayer + 1) % state.racks.length };
+			currentPlayer = (state.currentPlayer + 1) % state.racks.length;
+			return { ...state, currentPlayer };
 		case EMPTY_PICKED:
 			picked = [ ...state.picked ];
 			picked[state.currentPlayer] = [];
 			return { ...state, picked };
+		case TOGGLE_THONKING:
+			return { ...state, thonking: !state.thonking };
+		case SURRENDER:
+			return { ...state, surrendered: uniq([ ...state.surrendered, state.currentPlayer ]) };
+		case END_GAME:
+			return { ...state, endGame: true };
 		default:
 			return state;
 	}
