@@ -67,8 +67,7 @@ export default class Home extends Component {
 		return (
 			<div className={styles.container}>
 				<img src={Thonking} className={loadingClass} />
-				{started &&
-				!endGame && (
+				{started && (
 					<div>
 						<Table table={table} callback={this.onTileClicked} />
 						<div className={styles.buttonsContainer}>
@@ -98,8 +97,7 @@ export default class Home extends Component {
 						) : null}
 					</div>
 				)}
-				{!started &&
-				!endGame && (
+				{!started && (
 					<div className={`${styles.container} ${styles.startGame}`}>
 						<h1 className={styles.title}>Scree</h1>
 						<button
@@ -123,7 +121,15 @@ export default class Home extends Component {
 						</button>
 					</div>
 				)}
-				{endGame && <h1>Pemenangnya adalah {points[0] > points[1] ? 'Player 1' : 'Player 2'}</h1>}
+				{endGame && (
+					<div className={styles.overlay}>
+						{points[0] === points[1] && <h1>Seri!</h1>}
+						{points[0] !== points[1] && (
+							<h1>Pemenangnya adalah {points[0] > points[1] ? 'Player 1' : 'Player 2'}</h1>
+						)}
+						<button onClick={() => remote.getCurrentWindow().reload()}>Restart</button>
+					</div>
+				)}
 			</div>
 		);
 	}
